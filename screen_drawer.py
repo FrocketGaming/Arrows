@@ -17,7 +17,7 @@ class TransparentWindow(QMainWindow):
         self.base_flags = (Qt.WindowType.FramelessWindowHint | 
                           Qt.WindowType.WindowStaysOnTopHint | 
                           Qt.WindowType.Tool)
-        self.drawing_flags = self.base_flags | Qt.WindowType.SubWindow  # Changed to SubWindow
+        self.drawing_flags = self.base_flags
         self.inactive_flags = self.base_flags | Qt.WindowType.WindowTransparentForInput
         self.setWindowFlags(self.inactive_flags)
         
@@ -275,6 +275,10 @@ class TransparentWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
+        # Add very slight background when in drawing mode
+        if self.parent().drawing_mode:
+            painter.fillRect(self.rect(), QColor(255, 255, 255, 3))  # 1% opacity white background
+            
         # Set pen for drawing
         pen = QPen(self.parent().current_color)
         pen.setWidth(4)  # Make lines thicker

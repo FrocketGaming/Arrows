@@ -221,7 +221,14 @@ def main():
     mouse_thread.start()
     
     # Keep the main thread running
-    keyboard.wait('esc')
+    try:
+        keyboard.wait('esc')
+    except KeyboardInterrupt:
+        pass
+    finally:
+        # Cleanup
+        if drawer.current_window:
+            win32gui.PostMessage(drawer.current_window, win32con.WM_CLOSE, 0, 0)
 
 if __name__ == "__main__":
     main()

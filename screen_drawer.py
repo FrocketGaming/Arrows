@@ -233,54 +233,58 @@ def main():
     window = TransparentWindow()
     window.show()
     
-    # Required modifier keys
-    REQUIRED_MODIFIERS = {keyboard.Key.ctrl_l, keyboard.Key.ctrl_r, 
-                         keyboard.Key.alt_l, keyboard.Key.alt_r,
-                         keyboard.Key.shift, keyboard.Key.shift_r}
-    
-    # The target key
-    TARGET_KEYS = {keyboard.KeyCode(char='d'), keyboard.KeyCode(char='D')}
-    
     # Track currently pressed keys
     current = set()
     
+    def is_target_key(key):
+        """Check if a key is our target 'd' key, handling different key representations"""
+        if isinstance(key, keyboard.KeyCode):
+            return key.char in ['d', 'D']
+        return False
+        
+    def get_key_name(key):
+        """Get a readable name for a key"""
+        if isinstance(key, keyboard.KeyCode):
+            return f"KeyCode({key.char})" if hasattr(key, 'char') else str(key)
+        return str(key)
+    
     def on_press(key):
         try:
-            print(f"Key pressed: {key}, Type: {type(key)}")
+            print(f"\nKey pressed: {get_key_name(key)}")
             current.add(key)
-            print(f"Current keys held: {current}")
             
-            # Count modifiers currently held
-            held_modifiers = current.intersection(REQUIRED_MODIFIERS)
-            print(f"Held modifiers: {held_modifiers}")
+            # Debug current state
+            key_names = [get_key_name(k) for k in current]
+            print(f"Current keys held: {key_names}")
             
-            # Check if we have at least one of each type of modifier
+            # Check modifiers
             has_ctrl = any(k in current for k in [keyboard.Key.ctrl_l, keyboard.Key.ctrl_r])
             has_alt = any(k in current for k in [keyboard.Key.alt_l, keyboard.Key.alt_r])
             has_shift = any(k in current for k in [keyboard.Key.shift, keyboard.Key.shift_r])
+            has_target = any(is_target_key(k) for k in current)
             
-            # Check if target key is pressed
-            has_target = any(k in current for k in TARGET_KEYS)
-            
-            print(f"Ctrl: {has_ctrl}, Alt: {has_alt}, Shift: {has_shift}, Target: {has_target}")
+            print(f"Modifier state - Ctrl: {has_ctrl}, Alt: {has_alt}, Shift: {has_shift}")
+            print(f"Target key ('d') pressed: {has_target}")
             
             if has_ctrl and has_alt and has_shift and has_target:
-                print("Hotkey combination detected!")
+                print("🎯 Hotkey combination detected!")
                 window.toggle_drawing_mode()
-                return
                 
         except Exception as e:
             print(f"Error in on_press: {e}")
     
     def on_release(key):
         try:
-            # Handle the 'd' key release
-            if hasattr(key, 'char') and key.char in ['d', 'D']:
-                current.discard(keyboard.KeyCode(char=key.char))
+            print(f"\nKey released: {get_key_name(key)}")
+            if is_target_key(key):
+                # Remove any 'd' keys
+                current.difference_update({k for k in current if is_target_key(k)})
             else:
                 current.discard(key)
-        except KeyError:
-            pass
+            
+            # Debug current state after release
+            key_names = [get_key_name(k) for k in current]
+            print(f"Keys still held: {key_names}")
         except Exception as e:
             print(f"Error in on_release: {e}")
     

@@ -6,7 +6,7 @@ import keyboard
 import win32gui
 import win32con
 import win32process
-import win32user
+import win32api
 
 class DrawingWidget(QWidget):
     def __init__(self):
@@ -122,13 +122,13 @@ class MainWindow(QMainWindow):
             
             # Attach threads if necessary
             if current_thread != app_thread:
-                win32user.AttachThreadInput(current_thread, app_thread, True)
+                win32api.AttachThreadInput(current_thread, app_thread, True)
                 try:
                     win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
                     win32gui.SetForegroundWindow(hwnd)
                     win32gui.BringWindowToTop(hwnd)
                 finally:
-                    win32user.AttachThreadInput(current_thread, app_thread, False)
+                    win32api.AttachThreadInput(current_thread, app_thread, False)
             else:
                 win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
                 win32gui.SetForegroundWindow(hwnd)

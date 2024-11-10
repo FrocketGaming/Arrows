@@ -120,13 +120,15 @@ class TransparentWindow(QMainWindow):
             self.raise_()
             self.setWindowState(Qt.WindowState.WindowActive)
             self.toolbar.show()
+            self.transparent_widget.update()
         else:
             self.drawing_mode = False
+            self.toolbar.hide()
+            self.clearFocus()
             self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
             self.show()
-            self.clearFocus()
-            self.toolbar.hide()
-        self.transparent_widget.update()
+            self.lower()
+            self.transparent_widget.update()
         
 class TransparentWidget(QWidget):
     def __init__(self, parent=None):

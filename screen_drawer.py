@@ -158,13 +158,12 @@ class FloatingToolbar(QWidget):
         )
         
         # Create layout
-        layout = QVBoxLayout()
+        layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(4)
         
-        # Create toolbar with minimal size
+        # Create toolbar
         self.toolbar = QToolBar()
-        self.toolbar.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         self.toolbar.setStyleSheet("""
             QToolBar { 
                 background: rgba(50, 50, 50, 230);
@@ -214,8 +213,10 @@ class FloatingToolbar(QWidget):
         clear_button.clicked.connect(parent.clear_arrows)
         self.toolbar.addWidget(clear_button)
         
-        # Add toolbar to layout
+        # Add toolbar to layout and set initial position
         layout.addWidget(self.toolbar)
+        self.move(10, 10)
+        self.adjustSize()
         
     def handle_arrow_selection(self, arrow_type):
         """Handle arrow type selection and button states"""
@@ -226,13 +227,6 @@ class FloatingToolbar(QWidget):
             self.normal_arrow_button.setChecked(False)
             self.dissolving_arrow_button.setChecked(True)
         self.parent().set_arrow_type(arrow_type)
-        
-        # Set size and position
-        self.adjustSize()
-        self.move(10, 10)
-        
-        # Ensure minimal size
-        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
 
 class TransparentWidget(QWidget):
     def __init__(self, parent=None):

@@ -19,12 +19,15 @@ class TransparentWindow(QMainWindow):
         
         self.base_flags = (Qt.WindowType.FramelessWindowHint | 
                           Qt.WindowType.WindowStaysOnTopHint | 
-                          Qt.WindowType.Tool |
-                          Qt.WindowType.SubWindow)  # Allow drawing on other windows
-        self.drawing_flags = self.base_flags
+                          Qt.WindowType.Tool)
+        self.drawing_flags = self.base_flags | Qt.WindowType.SubWindow
         self.inactive_flags = self.base_flags | Qt.WindowType.WindowTransparentForInput
         self.setWindowFlags(self.inactive_flags)
+        
+        # Set initial attributes
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_AlwaysStackOnTop, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
         self.drawing_mode = False
         
         # Create transparent widget
@@ -82,22 +85,24 @@ class TransparentWindow(QMainWindow):
         self.drawing_mode = not self.drawing_mode
         
         if self.drawing_mode:
+            # Enable drawing mode
             self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
             self.setWindowFlags(self.drawing_flags)
             self.toolbar.show()
+            
+            # Force window to top and activate
+            self.show()
+            self.raise_()
+            self.activateWindow()
+            QApplication.setActiveWindow(self)
+            self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
+            self.toolbar.raise_()
         else:
+            # Disable drawing mode
             self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
             self.setWindowFlags(self.inactive_flags)
             self.toolbar.hide()
-            
-        self.show()
-        self.raise_()
-        self.activateWindow()
-        QApplication.setActiveWindow(self)
-        self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
-        
-        if self.drawing_mode:
-            self.toolbar.raise_()
+            self.show()
             
         self.transparent_widget.update()
             

@@ -12,6 +12,7 @@ class DrawingWidget(QWidget):
         self.arrows = []
         self.start_point = None
         self.current_end = None
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -32,7 +33,7 @@ class DrawingWidget(QWidget):
             
     def paintEvent(self, event):
         painter = QPainter(self)
-        painter.setPen(QPen(Qt.GlobalColor.black, 2))
+        painter.setPen(QPen(Qt.GlobalColor.red, 4))
         
         # Draw completed arrows
         for start, end in self.arrows:
@@ -77,6 +78,13 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Arrow Drawing App")
         self.setGeometry(100, 100, 800, 600)
+        
+        # Set window flags for transparency
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint |
+            Qt.WindowType.WindowStaysOnTopHint
+        )
         
         # Create and set the drawing widget as central widget
         self.drawing_widget = DrawingWidget()

@@ -17,12 +17,10 @@ class TransparentWindow(QMainWindow):
         self.alt_pressed = False
         self.shift_pressed = False
         
-        self.base_flags = (
-            Qt.WindowType.FramelessWindowHint | 
-            Qt.WindowType.WindowStaysOnTopHint |
-            Qt.WindowType.Tool  # Removes from taskbar
-        )
-        self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
+        self.base_flags = Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool
+        self.drawing_flags = self.base_flags
+        self.inactive_flags = self.base_flags | Qt.WindowType.WindowTransparentForInput
+        self.setWindowFlags(self.inactive_flags)
         self.drawing_mode = False
         
         # Create transparent widget
@@ -77,27 +75,25 @@ class TransparentWindow(QMainWindow):
             self.shift_pressed = False
             
     def toggle_drawing_mode(self):
-        if not self.drawing_mode:
-            self.drawing_mode = True
-            self.setWindowFlags(self.base_flags)
-            self.show()
+        self.drawing_mode = not self.drawing_mode
+        
+        if self.drawing_mode:
+            self.setWindowFlags(self.drawing_flags)
             self.toolbar.show()
-            self.transparent_widget.update()
-            
-            # Force focus and raise window
-            self.raise_()
-            self.activateWindow()
-            QApplication.setActiveWindow(self)
-            self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
-            
-            # Also raise toolbar
-            self.toolbar.raise_()
         else:
-            self.drawing_mode = False
+            self.setWindowFlags(self.inactive_flags)
             self.toolbar.hide()
-            self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
-            self.show()
-            self.transparent_widget.update()
+            
+        self.show()
+        self.raise_()
+        self.activateWindow()
+        QApplication.setActiveWindow(self)
+        self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
+        
+        if self.drawing_mode:
+            self.toolbar.raise_()
+            
+        self.transparent_widget.update()
             
     def focusOutEvent(self, event):
         """Handle focus loss"""

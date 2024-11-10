@@ -289,10 +289,10 @@ class FloatingToolbar(QWidget):
         self.toolbar_container.setMinimumHeight(0)
         self.toolbar_container.setMaximumHeight(0)
         
-        # Center the toolbar horizontally at top of screen
+        # Position at top center of screen, flush with top edge
         screen = QApplication.primaryScreen().geometry()
         self.setFixedWidth(200)  # Set fixed width to prevent shifting
-        self.move(screen.width() // 2 - 100, 10)  # Center horizontally, 10px from top
+        self.move(screen.width() // 2 - 100, 0)  # Center horizontally, flush with top
         
     def update_toggle_button_icon(self, is_expanded):
         # Create a custom arrow icon
@@ -320,10 +320,8 @@ class FloatingToolbar(QWidget):
         
     def toggle_toolbar(self):
         self.is_expanded = not self.is_expanded
-        current_pos = self.pos()  # Store current position
         
         if self.is_expanded:
-            self.move(current_pos)  # Maintain position
             # Show container and animate expansion
             self.toolbar_container.show()
             expanded_height = self.toolbar.sizeHint().height()
@@ -331,16 +329,10 @@ class FloatingToolbar(QWidget):
             # Configure animation
             self.animation.setStartValue(0)
             self.animation.setEndValue(expanded_height)
-            
-            # Update the container constraints
             self.toolbar_container.setMaximumHeight(expanded_height)
-            self.toolbar_container.setMinimumHeight(0)
         else:
             # Animate collapse
-            current_height = self.toolbar_container.height()
-            
-            # Configure animation
-            self.animation.setStartValue(current_height)
+            self.animation.setStartValue(self.toolbar_container.height())
             self.animation.setEndValue(0)
         
         def animation_finished():

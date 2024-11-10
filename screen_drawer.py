@@ -26,6 +26,9 @@ class TransparentWindow(QMainWindow):
         # Initialize arrows list
         self.arrows = []
         
+        # Start without focus
+        self.clearFocus()
+        
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
             self.close()
@@ -38,6 +41,7 @@ class TransparentWindow(QMainWindow):
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key.Key_Control:
             self.drawing_mode = False
+            self.clearFocus()
             self.transparent_widget.update()
         
 class TransparentWidget(QWidget):

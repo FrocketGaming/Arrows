@@ -207,7 +207,8 @@ class TransparentWidget(QWidget):
         if event.button() == Qt.MouseButton.LeftButton and self.drawing:
             self.drawing = False
             if self.start_point and self.end_point:
-                self.parent().arrows.append((self.start_point, self.end_point))
+                # Store arrow with its color
+                self.parent().arrows.append((self.start_point, self.end_point, self.parent().current_color))
                 print(f"Arrow added: from ({self.start_point.x()}, {self.start_point.y()}) to ({self.end_point.x()}, {self.end_point.y()})")
                 print(f"Total arrows: {len(self.parent().arrows)}")
             self.update()
@@ -225,12 +226,16 @@ class TransparentWidget(QWidget):
         pen.setWidth(4)  # Make lines thicker
         painter.setPen(pen)
         
-        # Draw all saved arrows
-        for start, end in self.parent().arrows:
+        # Draw all saved arrows with their colors
+        for start, end, color in self.parent().arrows:
+            pen.setColor(color)
+            painter.setPen(pen)
             self.draw_arrow(painter, start, end)
             
-        # Draw current arrow if drawing
+        # Draw current arrow if drawing (with current color)
         if self.drawing and self.start_point and self.end_point:
+            pen.setColor(self.parent().current_color)
+            painter.setPen(pen)
             self.draw_arrow(painter, self.start_point, self.end_point)
             
     def draw_arrow(self, painter, start, end):

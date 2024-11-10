@@ -34,42 +34,8 @@ class TransparentWindow(QMainWindow):
         # Initialize arrows list
         self.arrows = []
         
-        # Create and setup toolbar
-        self.toolbar = QToolBar()
-        self.toolbar.setStyleSheet("""
-            QToolBar { 
-                background: rgba(50, 50, 50, 230);
-                border-radius: 5px;
-                padding: 2px;
-            }
-            QPushButton {
-                background: rgba(70, 70, 70, 230);
-                border: 1px solid #555;
-                border-radius: 3px;
-                padding: 4px;
-                margin: 2px;
-                color: white;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background: rgba(90, 90, 90, 230);
-                border-color: #666;
-            }
-        """)
-        
-        # Add toolbar buttons
-        self.color_button = QPushButton("Color")
-        self.color_button.clicked.connect(self.choose_color)
-        self.toolbar.addWidget(self.color_button)
-        
-        self.clear_button = QPushButton("Clear")
-        self.clear_button.clicked.connect(self.clear_arrows)
-        self.toolbar.addWidget(self.clear_button)
-        
-        # Set initial position
-        self.toolbar.move(10, 10)
-        self.toolbar.hide()
-        self.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.toolbar)
+        # Create floating toolbar window
+        self.toolbar = FloatingToolbar(self)
         
         # Initialize current color
         self.current_color = QColor(255, 0, 0)  # Default red
@@ -117,14 +83,15 @@ class TransparentWindow(QMainWindow):
             self.raise_()
             self.toolbar.show()
             self.transparent_widget.update()
-            self.setFocus()
+            QApplication.setActiveWindow(self)
+            self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
         else:
             self.drawing_mode = False
             self.toolbar.hide()
             self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
             self.show()
-            self.activateWindow()  # Keep window active even when transparent
-            self.setFocus()
+            QApplication.setActiveWindow(self)
+            self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
             self.transparent_widget.update()
             
     def focusOutEvent(self, event):
@@ -133,6 +100,52 @@ class TransparentWindow(QMainWindow):
         self.activateWindow()
         self.setFocus()
         
+class FloatingToolbar(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowFlags(
+            Qt.WindowType.Tool |
+            Qt.WindowType.FramelessWindowHint |
+            Qt.WindowType.WindowStaysOnTopHint
+        )
+        
+        # Create layout
+        layout = QToolBar()
+        layout.setStyleSheet("""
+            QToolBar { 
+                background: rgba(50, 50, 50, 230);
+                border-radius: 5px;
+                padding: 2px;
+            }
+            QPushButton {
+                background: rgba(70, 70, 70, 230);
+                border: 1px solid #555;
+                border-radius: 3px;
+                padding: 4px;
+                margin: 2px;
+                color: white;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: rgba(90, 90, 90, 230);
+                border-color: #666;
+            }
+        """)
+        
+        # Add buttons
+        color_button = QPushButton("Color")
+        color_button.clicked.connect(parent.choose_color)
+        layout.addWidget(color_button)
+        
+        clear_button = QPushButton("Clear")
+        clear_button.clicked.connect(parent.clear_arrows)
+        layout.addWidget(clear_button)
+        
+        # Set size and position
+        self.setLayout(layout)
+        self.adjustSize()
+        self.move(10, 10)
+
 class TransparentWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)

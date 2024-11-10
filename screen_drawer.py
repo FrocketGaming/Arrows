@@ -248,66 +248,20 @@ def main():
     window = TransparentWindow()
     window.show()
     
-    # Track currently pressed keys
-    current = set()
+    # Set up hotkey
+    hotkey = keyboard.HotKey(
+        keyboard.HotKey.parse('<ctrl>+<alt>+<shift>+d'),
+        lambda: window.toggle_drawing_mode()
+    )
     
-    def is_target_key(key):
-        """Check if a key is our target 'd' key, handling different key representations"""
-        if isinstance(key, keyboard.KeyCode):
-            return key.char in ['d', 'D']
-        return False
-        
-    def get_key_name(key):
-        """Get a readable name for a key"""
-        if isinstance(key, keyboard.KeyCode):
-            return f"KeyCode({key.char})" if hasattr(key, 'char') else str(key)
-        return str(key)
+    def for_canonical(f):
+        return lambda k: f(keyboard.Listener.canonical(k))
     
-    def on_press(key):
-        try:
-            print(f"\nKey pressed: {get_key_name(key)}")
-            current.add(key)
-            
-            # Debug current state
-            key_names = [get_key_name(k) for k in current]
-            print(f"Current keys held: {key_names}")
-            
-            # Check modifiers
-            has_ctrl = any(k in current for k in [keyboard.Key.ctrl_l, keyboard.Key.ctrl_r])
-            has_alt = any(k in current for k in [keyboard.Key.alt_l, keyboard.Key.alt_r])
-            has_shift = any(k in current for k in [keyboard.Key.shift, keyboard.Key.shift_r])
-            has_target = any(is_target_key(k) for k in current)
-            
-            print(f"Modifier state - Ctrl: {has_ctrl}, Alt: {has_alt}, Shift: {has_shift}")
-            print(f"Target key ('d') pressed: {has_target}")
-            
-            if has_ctrl and has_alt and has_shift and has_target:
-                print("🎯 Hotkey combination detected!")
-                print("Attempting to toggle drawing mode...")
-                # Direct call for testing
-                window.toggle_drawing_mode()
-                print(f"Drawing mode is now: {window.drawing_mode}")
-                
-        except Exception as e:
-            print(f"Error in on_press: {e}")
-    
-    def on_release(key):
-        try:
-            print(f"\nKey released: {get_key_name(key)}")
-            if is_target_key(key):
-                # Remove any 'd' keys
-                current.difference_update({k for k in current if is_target_key(k)})
-            else:
-                current.discard(key)
-            
-            # Debug current state after release
-            key_names = [get_key_name(k) for k in current]
-            print(f"Keys still held: {key_names}")
-        except Exception as e:
-            print(f"Error in on_release: {e}")
-    
-    # Set up listener
-    listener = keyboard.Listener(on_press=on_press, on_release=on_release)
+    # Set up listener with the hotkey
+    listener = keyboard.Listener(
+        on_press=for_canonical(hotkey.press),
+        on_release=for_canonical(hotkey.release)
+    )
     listener.start()
     
     sys.exit(app.exec())

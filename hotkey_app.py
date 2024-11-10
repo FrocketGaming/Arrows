@@ -113,26 +113,30 @@ class MainWindow(QMainWindow):
             
             # Force focus using Win32 API
             hwnd = self.winId().__int__()
-            # Get current foreground window
-            current_hwnd = win32gui.GetForegroundWindow()
-            # Get current thread
-            current_thread = win32process.GetWindowThreadProcessId(current_hwnd)[0]
-            # Get app's thread
-            app_thread = win32process.GetWindowThreadProcessId(hwnd)[0]
             
-            # Attach threads if necessary
-            if current_thread != app_thread:
-                win32api.AttachThreadInput(current_thread, app_thread, True)
+            # Show window first
+            win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
+            
+            # Try to set foreground window directly first
+            if win32gui.GetForegroundWindow() != hwnd:
+                # If that didn't work, try with thread attachment
                 try:
-                    win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
+                    # Get current foreground window thread
+                    current_hwnd = win32gui.GetForegroundWindow()
+                    current_thread = win32process.GetWindowThreadProcessId(current_hwnd)[0]
+                    # Get our window thread
+                    app_thread = win32process.GetWindowThreadProcessId(hwnd)[0]
+                    
+                    if current_thread != app_thread:
+                        # Attach briefly
+                        win32api.AttachThreadInput(current_thread, app_thread, True)
+                        win32gui.SetForegroundWindow(hwnd)
+                        win32api.AttachThreadInput(current_thread, app_thread, False)
+                except:
+                    # If thread attachment fails, try alternative method
                     win32gui.SetForegroundWindow(hwnd)
-                    win32gui.BringWindowToTop(hwnd)
-                finally:
-                    win32api.AttachThreadInput(current_thread, app_thread, False)
-            else:
-                win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
-                win32gui.SetForegroundWindow(hwnd)
-                win32gui.BringWindowToTop(hwnd)
+                    
+            win32gui.BringWindowToTop(hwnd)
         except Exception as e:
             print(f"Error bringing window to front: {e}")
 

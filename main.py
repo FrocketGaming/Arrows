@@ -152,16 +152,21 @@ def main():
     keyboard.add_hotkey('ctrl+alt+f', drawer.toggle_drawing_mode)
     
     # Register mouse handlers
-    def on_mouse_click(event):
-        if event.event_type == keyboard.KEY_DOWN:
-            drawer.handle_mouse_click()
-    
-    def on_mouse_release(event):
-        if event.event_type == keyboard.KEY_UP:
-            drawer.handle_mouse_release()
-    
-    keyboard.on_press_key(keyboard.KEY_LEFT, on_mouse_click)
-    keyboard.on_release_key(keyboard.KEY_LEFT, on_mouse_release)
+    def check_mouse():
+        state_left = win32api.GetKeyState(0x01)  # Left mouse button
+        while True:
+            new_state_left = win32api.GetKeyState(0x01)
+            if new_state_left != state_left:  # Button state changed
+                state_left = new_state_left
+                if new_state_left < 0:  # Button pressed
+                    drawer.handle_mouse_click()
+                else:  # Button released
+                    drawer.handle_mouse_release()
+            time.sleep(0.001)  # Small sleep to prevent high CPU usage
+
+    # Start mouse monitoring in separate thread
+    mouse_thread = Thread(target=check_mouse, daemon=True)
+    mouse_thread.start()
     
     # Keep the main thread running
     keyboard.wait('esc')

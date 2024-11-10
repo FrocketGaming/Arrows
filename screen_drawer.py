@@ -1,5 +1,6 @@
 import sys
 import math
+from pynput import keyboard
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, 
                             QToolBar, QPushButton, QColorDialog,
                             QVBoxLayout, QSizePolicy)
@@ -232,10 +233,28 @@ def main():
     window = TransparentWindow()
     window.show()
     
-    # Create shortcut using Qt
-    from PyQt6.QtGui import QShortcut, QKeySequence
-    shortcut = QShortcut(QKeySequence('Ctrl+Alt+Shift+D'), window)
-    shortcut.activated.connect(window.toggle_drawing_mode)
+    # Create global hotkey
+    COMBINATIONS = [
+        {keyboard.Key.ctrl, keyboard.Key.alt, keyboard.Key.shift, keyboard.KeyCode(char='d')},
+        {keyboard.Key.ctrl, keyboard.Key.alt, keyboard.Key.shift, keyboard.KeyCode(char='D')}
+    ]
+    
+    # Track currently pressed keys
+    current = set()
+    
+    def on_press(key):
+        if any([key in combo for combo in COMBINATIONS]):
+            current.add(key)
+            if any(all(k in current for k in combo) for combo in COMBINATIONS):
+                window.toggle_drawing_mode()
+    
+    def on_release(key):
+        if any([key in combo for combo in COMBINATIONS]):
+            current.discard(key)
+    
+    # Set up listener
+    listener = keyboard.Listener(on_press=on_press, on_release=on_release)
+    listener.start()
     
     sys.exit(app.exec())
 

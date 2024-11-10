@@ -78,14 +78,17 @@ class TransparentWindow(QMainWindow):
         
     def update_dissolving_arrows(self):
         current_time = QTime.currentTime().msecsSinceStartOfDay()
-        updated = False
+        
+        # Check if we have any dissolving arrows
+        has_dissolving = any(arrow[4] for arrow in self.arrows)
         
         # Filter out arrows that have exceeded their 4-second lifetime
         self.arrows = [arrow for arrow in self.arrows 
                       if not arrow[4] or  # Keep normal arrows
                       (arrow[4] and current_time - arrow[3] < 4000)]  # Keep dissolving arrows within time
         
-        if updated:
+        # Force update if we have any dissolving arrows
+        if has_dissolving:
             self.transparent_widget.update()
         
     def keyPressEvent(self, event):
@@ -181,20 +184,27 @@ class FloatingToolbar(QWidget):
                 background: rgba(90, 90, 90, 230);
                 border-color: #666;
             }
+            QPushButton:checked {
+                background: rgba(100, 100, 255, 230);
+                border-color: #88f;
+            }
         """)
         
         # Add buttons
-        normal_arrow_button = QPushButton()
-        normal_arrow_button.setIcon(create_arrow_icon())
-        normal_arrow_button.setToolTip("Normal Arrow")
-        normal_arrow_button.clicked.connect(lambda: parent.set_arrow_type('normal'))
-        self.toolbar.addWidget(normal_arrow_button)
+        self.normal_arrow_button = QPushButton()
+        self.normal_arrow_button.setIcon(create_arrow_icon())
+        self.normal_arrow_button.setToolTip("Normal Arrow")
+        self.normal_arrow_button.setCheckable(True)
+        self.normal_arrow_button.setChecked(True)
+        self.normal_arrow_button.clicked.connect(lambda: self.handle_arrow_selection('normal'))
+        self.toolbar.addWidget(self.normal_arrow_button)
         
-        dissolving_arrow_button = QPushButton()
-        dissolving_arrow_button.setIcon(create_arrow_icon(dissolving=True))
-        dissolving_arrow_button.setToolTip("Dissolving Arrow")
-        dissolving_arrow_button.clicked.connect(lambda: parent.set_arrow_type('dissolving'))
-        self.toolbar.addWidget(dissolving_arrow_button)
+        self.dissolving_arrow_button = QPushButton()
+        self.dissolving_arrow_button.setIcon(create_arrow_icon(dissolving=True))
+        self.dissolving_arrow_button.setToolTip("Dissolving Arrow")
+        self.dissolving_arrow_button.setCheckable(True)
+        self.dissolving_arrow_button.clicked.connect(lambda: self.handle_arrow_selection('dissolving'))
+        self.toolbar.addWidget(self.dissolving_arrow_button)
         
         color_button = QPushButton("Color")
         color_button.clicked.connect(parent.choose_color)
@@ -206,6 +216,16 @@ class FloatingToolbar(QWidget):
         
         # Add toolbar to layout
         layout.addWidget(self.toolbar)
+        
+    def handle_arrow_selection(self, arrow_type):
+        """Handle arrow type selection and button states"""
+        if arrow_type == 'normal':
+            self.normal_arrow_button.setChecked(True)
+            self.dissolving_arrow_button.setChecked(False)
+        else:
+            self.normal_arrow_button.setChecked(False)
+            self.dissolving_arrow_button.setChecked(True)
+        self.parent().set_arrow_type(arrow_type)
         self.setLayout(layout)
         
         # Set size and position

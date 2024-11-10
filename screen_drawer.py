@@ -180,8 +180,18 @@ class FloatingToolbar(QWidget):
         self.toggle_button = QPushButton()
         self.toggle_button.setFixedSize(40, 20)
         self.toggle_button.clicked.connect(self.toggle_toolbar)
+        self.toggle_button.setStyleSheet("""
+            QPushButton {
+                background: rgb(50, 50, 50);
+                border: none;
+                border-radius: 3px;
+            }
+            QPushButton:hover {
+                background: rgb(60, 60, 60);
+            }
+        """)
         self.update_toggle_button_icon(False)
-        layout.addWidget(self.toggle_button)
+        layout.addWidget(self.toggle_button, 0, Qt.AlignmentFlag.AlignCenter)
         
         # Create toolbar container above
         self.toolbar_container = QWidget()
@@ -191,18 +201,22 @@ class FloatingToolbar(QWidget):
         )
         layout.insertWidget(0, self.toolbar_container)  # Insert at top
         
-        # Create toolbar layout with center alignment
+        # Create toolbar layout
         toolbar_layout = QVBoxLayout(self.toolbar_container)
         toolbar_layout.setContentsMargins(0, 0, 0, 0)
         toolbar_layout.setSpacing(0)
-        toolbar_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.toolbar_container.setStyleSheet("""
+            QWidget {
+                background: rgb(50, 50, 50);
+                border-radius: 5px;
+            }
+        """)
         
         # Create toolbar
         self.toolbar = QToolBar()
         self.toolbar.setStyleSheet("""
             QToolBar { 
-                background: rgb(50, 50, 50);
-                border-radius: 5px;
+                background: transparent;
                 padding: 2px;
             }
             QPushButton {

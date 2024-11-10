@@ -193,12 +193,11 @@ class FloatingToolbar(QWidget):
         self.toggle_button.clicked.connect(self.toggle_toolbar)
         self.toggle_button.setStyleSheet("""
             QPushButton {
-                background: rgb(40, 40, 40);
+                background: transparent;
                 border: none;
-                border-radius: 3px;
             }
             QPushButton:hover {
-                background: rgb(50, 50, 50);
+                background: rgba(255, 255, 255, 10);
             }
         """)
         self.update_toggle_button_icon(False)

@@ -8,10 +8,14 @@ class TransparentWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
+        self.installEventFilter(self)
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint | 
             Qt.WindowType.WindowStaysOnTopHint |
-            Qt.WindowType.Tool
+            Qt.WindowType.Tool |
+            Qt.WindowType.WindowTransparentForInput |
+            Qt.WindowType.BypassWindowManagerHint
         )
         self.drawing_mode = False
         
@@ -38,6 +42,22 @@ class TransparentWindow(QMainWindow):
             self.raise_()          # Bring it to the front
             self.transparent_widget.update()
             
+    def eventFilter(self, obj, event):
+        if event.type() == event.Type.KeyPress:
+            if event.key() == Qt.Key.Key_Control:
+                self.drawing_mode = True
+                self.activateWindow()
+                self.raise_()
+                self.transparent_widget.update()
+                return True
+        elif event.type() == event.Type.KeyRelease:
+            if event.key() == Qt.Key.Key_Control:
+                self.drawing_mode = False
+                self.clearFocus()
+                self.transparent_widget.update()
+                return True
+        return super().eventFilter(obj, event)
+
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key.Key_Control:
             self.drawing_mode = False

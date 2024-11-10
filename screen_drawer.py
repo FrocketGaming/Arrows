@@ -180,6 +180,7 @@ class FloatingToolbar(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
+        self.setContentsMargins(0, 0, 0, 0)  # Set margins for the widget itself
 
         # Make the main widget and all children transparent
         self.setStyleSheet("""
@@ -277,6 +278,7 @@ class FloatingToolbar(QWidget):
         container_layout = QVBoxLayout(self.toolbar_container)
         container_layout.setContentsMargins(0, 0, 0, 0)
         container_layout.setSpacing(0)
+        self.toolbar_container.setContentsMargins(0, 0, 0, 0)  # Set margins for container widget
         container_layout.addWidget(self.toolbar)
 
         # Make the container layout transparent

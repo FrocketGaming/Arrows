@@ -5,7 +5,9 @@ import keyboard
 import win32gui
 import win32con
 import win32api
+import win32con
 import numpy as np
+from win32con import MB_ICONINFORMATION
 from threading import Thread
 from dataclasses import dataclass
 from typing import Optional, Tuple
@@ -33,6 +35,9 @@ class ScreenDrawer:
         self.drawing_mode = not self.drawing_mode
         if not self.drawing_mode:
             self.drawing_start = None
+        # Show popup notification
+        status = "ENABLED" if self.drawing_mode else "DISABLED"
+        win32api.MessageBox(0, f"Drawing mode {status}", "Screen Arrow", MB_ICONINFORMATION)
     
     def handle_mouse_click(self):
         if self.drawing_mode:

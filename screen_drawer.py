@@ -80,11 +80,6 @@ class TransparentWindow(QMainWindow):
         # Start without focus
         self.clearFocus()
         
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_Escape:
-            self.arrows.clear()
-            self.transparent_widget.update()
-            
     def choose_color(self):
         color = QColorDialog.getColor(self.current_color, self)
         if color.isValid():

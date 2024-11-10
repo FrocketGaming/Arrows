@@ -10,13 +10,13 @@ class TransparentWindow(QMainWindow):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
         self.installEventFilter(self)
-        self.setWindowFlags(
+        self.base_flags = (
             Qt.WindowType.FramelessWindowHint | 
             Qt.WindowType.WindowStaysOnTopHint |
             Qt.WindowType.Tool |
-            Qt.WindowType.WindowTransparentForInput |
             Qt.WindowType.BypassWindowManagerHint
         )
+        self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
         self.drawing_mode = False
         
         # Create transparent widget
@@ -36,23 +36,13 @@ class TransparentWindow(QMainWindow):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
             self.close()
-        elif event.key() == Qt.Key.Key_Control:
-            self.drawing_mode = True
-            self.activateWindow()  # Activate the window
-            self.raise_()          # Bring it to the front
-            self.transparent_widget.update()
             
     def eventFilter(self, obj, event):
         if event.type() == event.Type.KeyPress:
             if event.key() == Qt.Key.Key_Control:
                 self.drawing_mode = True
-                self.setWindowFlags(
-                    Qt.WindowType.FramelessWindowHint | 
-                    Qt.WindowType.WindowStaysOnTopHint |
-                    Qt.WindowType.Tool |
-                    Qt.WindowType.BypassWindowManagerHint
-                )
-                self.show()  # Need to show again after changing flags
+                self.setWindowFlags(self.base_flags)  # Remove WindowTransparentForInput
+                self.show()
                 self.activateWindow()
                 self.raise_()
                 self.transparent_widget.update()
@@ -60,14 +50,8 @@ class TransparentWindow(QMainWindow):
         elif event.type() == event.Type.KeyRelease:
             if event.key() == Qt.Key.Key_Control:
                 self.drawing_mode = False
-                self.setWindowFlags(
-                    Qt.WindowType.FramelessWindowHint | 
-                    Qt.WindowType.WindowStaysOnTopHint |
-                    Qt.WindowType.Tool |
-                    Qt.WindowType.WindowTransparentForInput |
-                    Qt.WindowType.BypassWindowManagerHint
-                )
-                self.show()  # Need to show again after changing flags
+                self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
+                self.show()
                 self.clearFocus()
                 self.transparent_widget.update()
                 return True

@@ -1,5 +1,6 @@
 import sys
 import math
+import keyboard
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtGui import QPainter, QPen, QColor
@@ -9,13 +10,15 @@ class TransparentWindow(QMainWindow):
         super().__init__()
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
-        self.installEventFilter(self)
+        
+        # Set up global hotkey
+        keyboard.on_press_key('d', self.handle_hotkey, suppress=True)
         self.base_flags = (
             Qt.WindowType.FramelessWindowHint | 
             Qt.WindowType.WindowStaysOnTopHint |
             Qt.WindowType.Tool |
-            Qt.WindowType.SubWindow |
-            Qt.WindowType.BypassWindowManagerHint
+            Qt.WindowType.X11BypassWindowManagerHint |
+            Qt.WindowType.MaximizeUsingFullscreenGeometryHint
         )
         self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
         self.drawing_mode = False
@@ -38,40 +41,20 @@ class TransparentWindow(QMainWindow):
         if event.key() == Qt.Key.Key_Escape:
             self.close()
             
-    def eventFilter(self, obj, event):
-        if event.type() == event.Type.KeyPress:
-            if (event.key() == Qt.Key.Key_D and 
-                event.modifiers() == (Qt.KeyboardModifier.ControlModifier | 
-                                    Qt.KeyboardModifier.AltModifier | 
-                                    Qt.KeyboardModifier.ShiftModifier)):
+    def handle_hotkey(self, e):
+        if keyboard.is_pressed('ctrl+alt+shift'):
+            if not self.drawing_mode:
                 self.drawing_mode = True
-                self.setWindowFlags(self.base_flags)  # Remove WindowTransparentForInput
+                self.setWindowFlags(self.base_flags)
                 self.show()
                 self.activateWindow()
                 self.raise_()
                 self.setWindowState(Qt.WindowState.WindowActive)
-                self.transparent_widget.update()
-                return True
-        elif event.type() == event.Type.KeyRelease:
-            if (event.key() == Qt.Key.Key_D and 
-                event.modifiers() == (Qt.KeyboardModifier.ControlModifier | 
-                                    Qt.KeyboardModifier.AltModifier | 
-                                    Qt.KeyboardModifier.ShiftModifier)):
+            else:
                 self.drawing_mode = False
                 self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
                 self.show()
                 self.clearFocus()
-                self.transparent_widget.update()
-                return True
-        return super().eventFilter(obj, event)
-
-    def keyReleaseEvent(self, event):
-        if (event.key() == Qt.Key.Key_D and 
-            event.modifiers() == (Qt.KeyboardModifier.ControlModifier | 
-                                Qt.KeyboardModifier.AltModifier | 
-                                Qt.KeyboardModifier.ShiftModifier)):
-            self.drawing_mode = False
-            self.clearFocus()
             self.transparent_widget.update()
         
 class TransparentWidget(QWidget):

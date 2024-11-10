@@ -22,8 +22,7 @@ class TransparentWindow(QMainWindow):
         screen = QApplication.primaryScreen().geometry()
         self.setGeometry(screen)
         
-        # Initialize drawing state
-        self.drawing = False
+        # Initialize arrows list
         self.arrows = []
         
     def keyPressEvent(self, event):
@@ -37,7 +36,6 @@ class TransparentWidget(QWidget):
         self.start_point = None
         self.end_point = None
         self.drawing = False
-        self.arrows = []
         
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -54,7 +52,7 @@ class TransparentWidget(QWidget):
         if event.button() == Qt.MouseButton.LeftButton and self.drawing:
             self.drawing = False
             if self.start_point and self.end_point:
-                self.arrows.append((self.start_point, self.end_point))
+                self.parent().arrows.append((self.start_point, self.end_point))
             self.update()
             
     def paintEvent(self, event):
@@ -67,7 +65,7 @@ class TransparentWidget(QWidget):
         painter.setPen(pen)
         
         # Draw all saved arrows
-        for start, end in self.arrows:
+        for start, end in self.parent().arrows:
             self.draw_arrow(painter, start, end)
             
         # Draw current arrow if drawing

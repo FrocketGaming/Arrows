@@ -62,7 +62,9 @@ class TransparentWindow(QMainWindow):
             
     def toggle_drawing_mode(self):
         try:
+            print(f"Toggle drawing mode called. Current state: {self.drawing_mode}")
             self.drawing_mode = not self.drawing_mode
+            print(f"New drawing mode state: {self.drawing_mode}")
             
             if self.drawing_mode:
                 # Enable drawing mode
@@ -281,12 +283,10 @@ def main():
             
             if has_ctrl and has_alt and has_shift and has_target:
                 print("🎯 Hotkey combination detected!")
-                # Use invokeMethod to safely call from another thread
-                QApplication.instance().invokeMethod(
-                    window,
-                    "toggle_drawing_mode",
-                    Qt.ConnectionType.QueuedConnection
-                )
+                print("Attempting to toggle drawing mode...")
+                # Direct call for testing
+                window.toggle_drawing_mode()
+                print(f"Drawing mode is now: {window.drawing_mode}")
                 
         except Exception as e:
             print(f"Error in on_press: {e}")

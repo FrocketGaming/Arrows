@@ -123,9 +123,7 @@ class TransparentWindow(QMainWindow):
                 )
                 self.setWindowFlags(self.drawing_flags)
                 self.show()
-
-                # Use timer to sequence the window operations
-                self.show()
+                self.toolbar.show()
                 self.raise_()
                 self.activateWindow()
                 self.toolbar.raise_()
@@ -261,6 +259,7 @@ class FloatingToolbar(QWidget):
         
         # Initialize state
         self.is_expanded = False
+        self.toolbar_container.setMinimumHeight(0)
         self.toolbar_container.setMaximumHeight(0)
         
         # Center the toolbar horizontally
@@ -294,10 +293,12 @@ class FloatingToolbar(QWidget):
         self.is_expanded = not self.is_expanded
         target_height = self.toolbar.sizeHint().height() + 8 if self.is_expanded else 0
         
-        self.animation.setStartValue(self.toolbar_container.maximumHeight())
+        self.animation.setStartValue(self.toolbar_container.height())
         self.animation.setEndValue(target_height)
         self.animation.start()
         
+        # Update both min and max height
+        self.toolbar_container.setMaximumHeight(target_height)
         self.update_toggle_button_icon(self.is_expanded)
 
     def handle_arrow_selection(self, arrow_type):

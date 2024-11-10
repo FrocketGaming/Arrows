@@ -274,12 +274,13 @@ class FloatingToolbar(QWidget):
         
         # Set up animation
         self.animation = QPropertyAnimation(self.toolbar_container, b"maximumHeight")
-        self.animation.setDuration(200)
-        self.animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self.animation.setDuration(250)  # Slightly longer duration
+        self.animation.setEasingCurve(QEasingCurve.Type.OutQuad)
         
         # Initialize state
         self.is_expanded = False
         self.toolbar_container.setMaximumHeight(0)
+        self.toolbar_container.hide()
         
         # Position at top center of screen, flush with top edge
         screen = QApplication.primaryScreen().geometry()
@@ -313,18 +314,26 @@ class FloatingToolbar(QWidget):
     def toggle_toolbar(self):
         self.is_expanded = not self.is_expanded
         
-        # Show container before animation starts
-        self.toolbar_container.show()
-        
+        # Disconnect any existing connections to avoid multiple signals
+        try:
+            self.animation.finished.disconnect()
+        except TypeError:
+            pass
+            
         # Calculate target height
         target_height = self.toolbar.sizeHint().height() + 10 if self.is_expanded else 0
         
-        # Configure and start animation
+        # Show container if expanding
+        if self.is_expanded:
+            self.toolbar_container.show()
+        
+        # Configure animation
         self.animation.setStartValue(self.toolbar_container.height())
         self.animation.setEndValue(target_height)
         self.animation.finished.connect(lambda: self.on_animation_finished(target_height))
-        self.animation.start()
         
+        # Start animation
+        self.animation.start()
         self.update_toggle_button_icon(self.is_expanded)
 
     def on_animation_finished(self, target_height):

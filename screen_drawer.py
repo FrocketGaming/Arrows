@@ -39,7 +39,8 @@ class TransparentWindow(QMainWindow):
         
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
-            self.close()
+            self.arrows.clear()
+            self.transparent_widget.update()
             
     def handle_hotkey(self, e):
         if keyboard.is_pressed('ctrl+alt+shift'):

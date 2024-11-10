@@ -125,9 +125,6 @@ class TransparentWindow(QMainWindow):
 
                 # Use timer to sequence the window operations
                 self.show()
-                self.toolbar_container.setMaximumHeight(0)
-                self.is_expanded = False
-                self.update_toggle_button_icon(False)
                 self.raise_()
                 self.activateWindow()
                 self.toolbar.raise_()

@@ -56,6 +56,7 @@ class TransparentWindow(QMainWindow):
 
         # Create floating toolbar window
         self.toolbar = FloatingToolbar(self)
+        self.toolbar.show()  # Show the toolbar immediately
 
         # Initialize current color
         self.current_color = QColor(255, 0, 0)  # Default red

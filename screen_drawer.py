@@ -205,11 +205,12 @@ class FloatingToolbar(QWidget):
         self.toggle_button.clicked.connect(self.toggle_toolbar)
         self.toggle_button.setStyleSheet("""
             QPushButton {
-                background: transparent;
+                background: rgba(60, 60, 60, 0.95);
                 border: none;
+                border-radius: 3px;
             }
             QPushButton:hover {
-                background: rgba(255, 255, 255, 10);
+                background: rgba(80, 80, 80, 0.95);
             }
         """)
         self.update_toggle_button_icon(False)
@@ -218,13 +219,14 @@ class FloatingToolbar(QWidget):
         # Create toolbar
         self.toolbar = QToolBar()
         self.toolbar.setStyleSheet("""
-            QToolBar, QToolBar * { 
-                background: transparent;
+            QToolBar { 
+                background: rgba(60, 60, 60, 0.95);
                 padding: 2px;
+                border-radius: 5px;
             }
             QPushButton {
-                background: #fff;
-                border: 1px solid #333;
+                background: rgba(80, 80, 80, 0.95);
+                border: 1px solid #555;
                 border-radius: 3px;
                 padding: 4px;
                 margin: 2px;
@@ -232,11 +234,11 @@ class FloatingToolbar(QWidget):
                 font-weight: bold;
             }
             QPushButton:hover {
-                background: rgb(50, 50, 50);
-                border-color: #444;
+                background: rgba(100, 100, 100, 0.95);
+                border-color: #666;
             }
             QPushButton:checked {
-                background: rgb(100, 100, 255);
+                background: rgba(100, 100, 255, 0.95);
                 border-color: #88f;
             }
         """)

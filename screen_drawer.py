@@ -235,8 +235,16 @@ def main():
     
     # Create global hotkey
     COMBINATIONS = [
-        {keyboard.Key.ctrl, keyboard.Key.alt, keyboard.Key.shift, keyboard.KeyCode(char='d')},
-        {keyboard.Key.ctrl, keyboard.Key.alt, keyboard.Key.shift, keyboard.KeyCode(char='D')}
+        # Left Ctrl combinations
+        {keyboard.Key.ctrl_l, keyboard.Key.alt_l, keyboard.Key.shift, keyboard.KeyCode(char='d')},
+        {keyboard.Key.ctrl_l, keyboard.Key.alt_l, keyboard.Key.shift, keyboard.KeyCode(char='D')},
+        {keyboard.Key.ctrl_l, keyboard.Key.alt_r, keyboard.Key.shift, keyboard.KeyCode(char='d')},
+        {keyboard.Key.ctrl_l, keyboard.Key.alt_r, keyboard.Key.shift, keyboard.KeyCode(char='D')},
+        # Right Ctrl combinations
+        {keyboard.Key.ctrl_r, keyboard.Key.alt_l, keyboard.Key.shift, keyboard.KeyCode(char='d')},
+        {keyboard.Key.ctrl_r, keyboard.Key.alt_l, keyboard.Key.shift, keyboard.KeyCode(char='D')},
+        {keyboard.Key.ctrl_r, keyboard.Key.alt_r, keyboard.Key.shift, keyboard.KeyCode(char='d')},
+        {keyboard.Key.ctrl_r, keyboard.Key.alt_r, keyboard.Key.shift, keyboard.KeyCode(char='D')}
     ]
     
     # Track currently pressed keys
@@ -244,8 +252,11 @@ def main():
     
     def on_press(key):
         if any([key in combo for combo in COMBINATIONS]):
+            print(f"Key pressed: {key}")
             current.add(key)
+            print(f"Current keys held: {current}")
             if any(all(k in current for k in combo) for combo in COMBINATIONS):
+                print("Hotkey combination detected!")
                 window.toggle_drawing_mode()
     
     def on_release(key):

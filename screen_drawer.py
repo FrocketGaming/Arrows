@@ -47,9 +47,20 @@ class TransparentWindow(QMainWindow):
         self.clearFocus()
         
     def choose_color(self):
+        # Store current drawing mode state
+        was_drawing = self.drawing_mode
+        if was_drawing:
+            # Temporarily disable drawing mode
+            self.toggle_drawing_mode()
+        
+        # Show color dialog
         color = QColorDialog.getColor(self.current_color, self)
         if color.isValid():
             self.current_color = color
+            
+        # Restore drawing mode if it was active
+        if was_drawing:
+            self.toggle_drawing_mode()
             
     def clear_arrows(self):
         self.arrows.clear()

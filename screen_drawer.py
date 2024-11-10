@@ -56,7 +56,8 @@ class TransparentWindow(QMainWindow):
 
         # Create floating toolbar window
         self.toolbar = FloatingToolbar(self)
-        self.toolbar.hide()  # Ensure toolbar is hidden initially
+        self.toolbar.toolbar_container.hide()  # Hide the container
+        self.toolbar.hide()  # Hide the entire toolbar initially
 
         # Initialize current color
         self.current_color = QColor(255, 0, 0)  # Default red
@@ -123,10 +124,10 @@ class TransparentWindow(QMainWindow):
                 )
                 self.setWindowFlags(self.drawing_flags)
                 self.show()
-                # Show toolbar and ensure it's collapsed
-                self.toolbar.is_expanded = True  # Force it to collapse
-                self.toolbar.toggle_toolbar()    # Collapse it
-                self.toolbar.show()
+                # Show toolbar in collapsed state
+                self.toolbar.is_expanded = False  # Ensure it starts collapsed
+                self.toolbar.toolbar_container.hide()  # Ensure container is hidden
+                self.toolbar.show()  # Only show the toggle button
                 self.raise_()
                 self.activateWindow()
                 self.toolbar.raise_()

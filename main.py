@@ -40,7 +40,14 @@ class ScreenDrawer:
             # Small delay to allow the window to be created
             time.sleep(0.1)
             if self.current_window:
-                win32gui.SetForegroundWindow(self.current_window)
+                try:
+                    # Try to force the window to be visible and active
+                    win32gui.ShowWindow(self.current_window, win32con.SW_SHOW)
+                    win32gui.SetWindowPos(self.current_window, win32con.HWND_TOPMOST, 0, 0, 0, 0,
+                                        win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_SHOWWINDOW)
+                    win32gui.SetForegroundWindow(self.current_window)
+                except Exception as e:
+                    print(f"Failed to set window focus: {e}")
         
         # Show popup notification
         status = "ENABLED" if self.drawing_mode else "DISABLED"

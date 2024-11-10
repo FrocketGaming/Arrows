@@ -171,6 +171,7 @@ class FloatingToolbar(QWidget):
             | Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.WindowStaysOnTopHint
         )
+        self.initial_position = None
         
         # Set widget attributes for transparency
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -306,10 +307,12 @@ class FloatingToolbar(QWidget):
         self.toolbar_container.setMaximumHeight(0)
         self.toolbar_container.hide()
 
-        # Position at top center of screen
+        # Position at top center of screen and store initial position
         screen = QApplication.primaryScreen().geometry()
         self.setFixedWidth(200)  # Set fixed width to prevent shifting
-        self.move(screen.width() // 2 - 100, 0)  # Exactly at top edge
+        initial_x = screen.width() // 2 - 100
+        self.move(initial_x, 0)  # Exactly at top edge
+        self.initial_position = QPoint(initial_x, 0)
 
     def update_toggle_button_icon(self, is_expanded):
         # Create a custom arrow icon
@@ -340,9 +343,6 @@ class FloatingToolbar(QWidget):
     def toggle_toolbar(self):
         self.is_expanded = not self.is_expanded
 
-        # Store current position
-        current_pos = self.pos()
-
         # Disconnect any existing connections to avoid multiple signals
         try:
             self.animation.finished.disconnect()
@@ -367,8 +367,8 @@ class FloatingToolbar(QWidget):
         self.animation.start()
         self.update_toggle_button_icon(self.is_expanded)
 
-        # Ensure position stays at top edge
-        self.move(current_pos.x(), 0)
+        # Restore to initial position
+        self.move(self.initial_position)
 
     def on_animation_finished(self, target_height):
         """Hide container if fully collapsed"""

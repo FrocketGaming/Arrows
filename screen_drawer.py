@@ -275,6 +275,10 @@ class FloatingToolbar(QWidget):
         container_layout.setSpacing(0)
         container_layout.addWidget(self.toolbar)
         
+        # Make the container layout transparent
+        self.toolbar_container.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.toolbar_container.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
+        
         # Set fixed width to accommodate all buttons
         self.toolbar.setFixedWidth(200)
         

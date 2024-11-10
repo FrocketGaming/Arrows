@@ -1,9 +1,10 @@
 import sys
 import math
 import keyboard
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, 
+                            QToolBar, QPushButton, QColorDialog)
 from PyQt6.QtCore import Qt, QPoint
-from PyQt6.QtGui import QPainter, QPen, QColor
+from PyQt6.QtGui import QPainter, QPen, QColor, QIcon
 
 class TransparentWindow(QMainWindow):
     def __init__(self):
@@ -34,6 +35,43 @@ class TransparentWindow(QMainWindow):
         # Initialize arrows list
         self.arrows = []
         
+        # Create and setup toolbar
+        self.toolbar = QToolBar()
+        self.toolbar.setStyleSheet("""
+            QToolBar { 
+                background: rgba(255, 255, 255, 200);
+                border-radius: 5px;
+                padding: 2px;
+            }
+            QPushButton {
+                background: rgba(240, 240, 240, 200);
+                border: 1px solid gray;
+                border-radius: 3px;
+                padding: 4px;
+                margin: 2px;
+            }
+            QPushButton:hover {
+                background: rgba(220, 220, 220, 200);
+            }
+        """)
+        
+        # Add toolbar buttons
+        self.color_button = QPushButton("Color")
+        self.color_button.clicked.connect(self.choose_color)
+        self.toolbar.addWidget(self.color_button)
+        
+        self.clear_button = QPushButton("Clear")
+        self.clear_button.clicked.connect(self.clear_arrows)
+        self.toolbar.addWidget(self.clear_button)
+        
+        # Set initial position
+        self.toolbar.move(10, 10)
+        self.toolbar.hide()
+        self.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.toolbar)
+        
+        # Initialize current color
+        self.current_color = QColor(255, 0, 0)  # Default red
+        
         # Start without focus
         self.clearFocus()
         
@@ -42,6 +80,15 @@ class TransparentWindow(QMainWindow):
             self.arrows.clear()
             self.transparent_widget.update()
             
+    def choose_color(self):
+        color = QColorDialog.getColor(self.current_color, self)
+        if color.isValid():
+            self.current_color = color
+            
+    def clear_arrows(self):
+        self.arrows.clear()
+        self.transparent_widget.update()
+        
     def handle_hotkey(self, e):
         if keyboard.is_pressed('ctrl+alt+shift'):
             if not self.drawing_mode:
@@ -51,11 +98,13 @@ class TransparentWindow(QMainWindow):
                 self.activateWindow()
                 self.raise_()
                 self.setWindowState(Qt.WindowState.WindowActive)
+                self.toolbar.show()
             else:
                 self.drawing_mode = False
                 self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
                 self.show()
                 self.clearFocus()
+                self.toolbar.hide()
             self.transparent_widget.update()
         
 class TransparentWidget(QWidget):
@@ -98,7 +147,7 @@ class TransparentWidget(QWidget):
             painter.fillRect(self.rect(), QColor(0, 255, 0, 30))  # Green tint when drawing mode
         
         # Set pen for drawing
-        pen = QPen(QColor(255, 0, 0))  # Red color
+        pen = QPen(self.parent().current_color)
         pen.setWidth(4)  # Make lines thicker
         painter.setPen(pen)
         

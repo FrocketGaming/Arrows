@@ -181,6 +181,10 @@ class FloatingToolbar(QWidget):
         
         # Create toolbar container
         self.toolbar_container = QWidget()
+        self.toolbar_container.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Minimum
+        )
         layout.addWidget(self.toolbar_container)
         
         # Create toolbar layout
@@ -244,10 +248,14 @@ class FloatingToolbar(QWidget):
         self.toolbar.addWidget(clear_button)
 
         # Add toolbar to layout
+        self.toolbar.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Fixed
+        )
         toolbar_layout.addWidget(self.toolbar)
         
         # Set up animation
-        self.animation = QPropertyAnimation(self.toolbar_container, b"maximumHeight")
+        self.animation = QPropertyAnimation(self.toolbar_container, b"minimumHeight")
         self.animation.setDuration(300)
         self.animation.setEasingCurve(QEasingCurve.Type.OutCubic)
         

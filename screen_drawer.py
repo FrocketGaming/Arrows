@@ -330,15 +330,19 @@ class FloatingToolbar(QWidget):
             self.animation.setStartValue(0)
             self.animation.setEndValue(expanded_height)
             self.toolbar_container.setMaximumHeight(expanded_height)
+            self.toolbar_container.setMinimumHeight(0)
         else:
             # Animate collapse
-            self.animation.setStartValue(self.toolbar_container.height())
+            current_height = self.toolbar_container.height()
+            self.animation.setStartValue(current_height)
             self.animation.setEndValue(0)
-        
+            self.toolbar_container.setMaximumHeight(current_height)
+            
         def animation_finished():
             if not self.is_expanded:
-                # Hide container when collapsed
                 self.toolbar_container.hide()
+                self.toolbar_container.setMaximumHeight(0)
+                self.toolbar_container.setMinimumHeight(0)
         
         # Disconnect any previous connections to avoid multiple calls
         try:

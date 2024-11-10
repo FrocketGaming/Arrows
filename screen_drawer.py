@@ -176,7 +176,7 @@ class FloatingToolbar(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         
-        # Create toggle button first
+        # Create toggle button
         self.toggle_button = QPushButton()
         self.toggle_button.setFixedSize(40, 20)
         self.toggle_button.clicked.connect(self.toggle_toolbar)
@@ -191,15 +191,15 @@ class FloatingToolbar(QWidget):
             }
         """)
         self.update_toggle_button_icon(False)
-        layout.addWidget(self.toggle_button, 0, Qt.AlignmentFlag.AlignCenter)
         
-        # Create toolbar container above
+        # Create toolbar container
         self.toolbar_container = QWidget()
         self.toolbar_container.setSizePolicy(
             QSizePolicy.Policy.Fixed,
             QSizePolicy.Policy.Fixed
         )
-        layout.insertWidget(0, self.toolbar_container)  # Insert at top
+        layout.addWidget(self.toolbar_container)
+        layout.addWidget(self.toggle_button, 0, Qt.AlignmentFlag.AlignCenter)
         
         # Create toolbar layout
         toolbar_layout = QVBoxLayout(self.toolbar_container)
@@ -211,8 +211,8 @@ class FloatingToolbar(QWidget):
                 border-radius: 5px;
             }
         """)
-        # Set initial height to match toggle button
-        self.toolbar_container.setFixedHeight(20)
+        # Initially hide the container
+        self.toolbar_container.hide()
         
         # Create toolbar
         self.toolbar = QToolBar()
@@ -319,27 +319,30 @@ class FloatingToolbar(QWidget):
     def toggle_toolbar(self):
         self.is_expanded = not self.is_expanded
         
-        # Calculate heights
-        expanded_height = self.toolbar.sizeHint().height()
-        collapsed_height = 20  # Same as toggle button height
-        current_height = self.toolbar_container.height()
-        target_height = expanded_height if self.is_expanded else collapsed_height
-        
-        # Configure animation
-        self.animation.setStartValue(current_height)
-        self.animation.setEndValue(target_height)
-        
-        # Update the container constraints
-        self.toolbar_container.setMaximumHeight(expanded_height)
+        if self.is_expanded:
+            # Show container and animate expansion
+            self.toolbar_container.show()
+            expanded_height = self.toolbar.sizeHint().height()
+            
+            # Configure animation
+            self.animation.setStartValue(0)
+            self.animation.setEndValue(expanded_height)
+            
+            # Update the container constraints
+            self.toolbar_container.setMaximumHeight(expanded_height)
+            self.toolbar_container.setMinimumHeight(0)
+        else:
+            # Animate collapse
+            current_height = self.toolbar_container.height()
+            
+            # Configure animation
+            self.animation.setStartValue(current_height)
+            self.animation.setEndValue(0)
         
         def animation_finished():
             if not self.is_expanded:
-                # When collapsed, set height to match toggle button
-                self.toolbar_container.setMaximumHeight(collapsed_height)
-                self.toolbar_container.setMinimumHeight(collapsed_height)
-            else:
-                # When expanded, allow the container to fit the content
-                self.toolbar_container.setMinimumHeight(target_height)
+                # Hide container when collapsed
+                self.toolbar_container.hide()
         
         # Disconnect any previous connections to avoid multiple calls
         try:

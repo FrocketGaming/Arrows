@@ -185,13 +185,19 @@ class ScreenDrawer:
 
     def draw_loop(self):
         self.create_window()
+        win32gui.ShowWindow(self.current_window, win32con.SW_SHOW)
         
         # Message loop
-        msg = win32gui.WNDCLASS()
-        while win32gui.PumpMessages():
-            # Force redraw
-            if self.current_window:
-                win32gui.InvalidateRect(self.current_window, None, True)
+        while True:
+            try:
+                if not win32gui.PumpWaitingMessages():
+                    break
+                # Redraw periodically but not continuously
+                if self.current_window:
+                    win32gui.InvalidateRect(self.current_window, None, True)
+                time.sleep(0.016)  # ~60 FPS
+            except Exception:
+                break
 
 def main():
     drawer = ScreenDrawer()

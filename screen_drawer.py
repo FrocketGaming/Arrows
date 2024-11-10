@@ -181,32 +181,7 @@ class FloatingToolbar(QWidget):
         layout.setSpacing(0)
         self.setContentsMargins(0, 0, 0, 0)
 
-        # Make the main widget and all children transparent
-        self.setStyleSheet("""
-            FloatingToolbar, QWidget {
-                background: transparent;
-                border: none;
-            }
-        """)
-
-        # Create toggle button
-        self.toggle_button = QPushButton()
-        self.toggle_button.setFixedSize(40, 20)
-        self.toggle_button.clicked.connect(self.toggle_toolbar)
-        self.toggle_button.setStyleSheet("""
-            QPushButton {
-                background: rgba(60, 60, 60, 0.95);
-                border: none;
-                border-radius: 3px;
-            }
-            QPushButton:hover {
-                background: rgba(80, 80, 80, 0.95);
-            }
-        """)
-        self.update_toggle_button_icon(False)
-        layout.addWidget(self.toggle_button, 0, Qt.AlignmentFlag.AlignCenter)
-
-        # Create toolbar
+        # Create toolbar first (but don't add to layout yet)
         self.toolbar = QToolBar()
         self.toolbar.setStyleSheet("""
             QToolBar { 
@@ -232,46 +207,40 @@ class FloatingToolbar(QWidget):
                 border-color: #88f;
             }
         """)
-
-        # Add buttons
-        self.normal_arrow_button = QPushButton()
-        self.normal_arrow_button.setIcon(create_arrow_icon())
-        self.normal_arrow_button.setToolTip("Normal Arrow")
-        self.normal_arrow_button.setCheckable(True)
-        self.normal_arrow_button.setChecked(True)
-        self.normal_arrow_button.clicked.connect(
-            lambda: self.handle_arrow_selection("normal")
-        )
-        self.toolbar.addWidget(self.normal_arrow_button)
-
-        self.dissolving_arrow_button = QPushButton()
-        self.dissolving_arrow_button.setIcon(create_arrow_icon(dissolving=True))
-        self.dissolving_arrow_button.setToolTip("Dissolving Arrow")
-        self.dissolving_arrow_button.setCheckable(True)
-        self.dissolving_arrow_button.clicked.connect(
-            lambda: self.handle_arrow_selection("dissolving")
-        )
-        self.toolbar.addWidget(self.dissolving_arrow_button)
-
-        color_button = QPushButton("Color")
-        color_button.clicked.connect(parent.choose_color)
-        self.toolbar.addWidget(color_button)
-
-        clear_button = QPushButton("Clear")
-        clear_button.clicked.connect(parent.clear_arrows)
-        self.toolbar.addWidget(clear_button)
-
-        # Add toolbar to layout
-        self.toolbar.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        # Add toolbar directly to main layout
-        layout.addWidget(self.toolbar)
-
-        # Set fixed width to accommodate all buttons
+        self.setup_toolbar_buttons()
         self.toolbar.setFixedWidth(200)
+        self.toolbar.hide()
+
+        # Create toggle button
+        self.toggle_button = QPushButton()
+        self.toggle_button.setFixedSize(40, 20)
+        self.toggle_button.clicked.connect(self.toggle_toolbar)
+        self.toggle_button.setStyleSheet("""
+            QPushButton {
+                background: rgba(60, 60, 60, 0.95);
+                border: none;
+                border-radius: 3px;
+            }
+            QPushButton:hover {
+                background: rgba(80, 80, 80, 0.95);
+            }
+        """)
+        self.update_toggle_button_icon(False)
+        layout.addWidget(self.toggle_button, 0, Qt.AlignmentFlag.AlignCenter)
+
+        # Add widgets to layout
+        layout.addWidget(self.toolbar)
+        layout.addWidget(self.toggle_button)
+
+        # Set up animation
+        self.animation = QPropertyAnimation(self, b"geometry")
+        self.animation.setDuration(200)
+        self.animation.setEasingCurve(QEasingCurve.Type.OutQuad)
 
         # Initialize state
         self.is_expanded = False
-        self.toolbar.hide()
+        self.base_height = self.toggle_button.height()
+        self.expanded_height = self.base_height + self.toolbar.height() + layout.spacing()
 
         # Position at top center of screen and store initial position
         screen = QApplication.primaryScreen().geometry()
@@ -308,12 +277,30 @@ class FloatingToolbar(QWidget):
 
     def toggle_toolbar(self):
         self.is_expanded = not self.is_expanded
+        
+        # Get current geometry
+        geo = self.geometry()
+        
+        # Calculate target geometry
         if self.is_expanded:
             self.toolbar.show()
+            target_height = self.expanded_height
         else:
-            self.toolbar.hide()
+            target_height = self.base_height
+        
+        # Set up animation
+        self.animation.setStartValue(geo)
+        target_geo = geo
+        target_geo.setHeight(target_height)
+        self.animation.setEndValue(target_geo)
+        
+        # Connect cleanup for when toolbar is hidden
+        if not self.is_expanded:
+            self.animation.finished.connect(lambda: self.toolbar.hide())
+        
+        # Update button icon and start animation
         self.update_toggle_button_icon(self.is_expanded)
-        self.move(self.initial_position)
+        self.animation.start()
 
     def on_animation_finished(self, target_height):
         """Hide container if fully collapsed"""
@@ -459,3 +446,31 @@ def main():
 
 if __name__ == "__main__":
     main()
+    def setup_toolbar_buttons(self):
+        """Set up all toolbar buttons"""
+        self.normal_arrow_button = QPushButton()
+        self.normal_arrow_button.setIcon(create_arrow_icon())
+        self.normal_arrow_button.setToolTip("Normal Arrow")
+        self.normal_arrow_button.setCheckable(True)
+        self.normal_arrow_button.setChecked(True)
+        self.normal_arrow_button.clicked.connect(
+            lambda: self.handle_arrow_selection("normal")
+        )
+        self.toolbar.addWidget(self.normal_arrow_button)
+
+        self.dissolving_arrow_button = QPushButton()
+        self.dissolving_arrow_button.setIcon(create_arrow_icon(dissolving=True))
+        self.dissolving_arrow_button.setToolTip("Dissolving Arrow")
+        self.dissolving_arrow_button.setCheckable(True)
+        self.dissolving_arrow_button.clicked.connect(
+            lambda: self.handle_arrow_selection("dissolving")
+        )
+        self.toolbar.addWidget(self.dissolving_arrow_button)
+
+        color_button = QPushButton("Color")
+        color_button.clicked.connect(self.parent().choose_color)
+        self.toolbar.addWidget(color_button)
+
+        clear_button = QPushButton("Clear")
+        clear_button.clicked.connect(self.parent().clear_arrows)
+        self.toolbar.addWidget(clear_button)

@@ -109,9 +109,9 @@ class FloatingToolbar(QWidget):
             Qt.WindowType.WindowStaysOnTopHint
         )
         
-        # Create layout
-        layout = QToolBar()
-        layout.setStyleSheet("""
+        # Create toolbar
+        self.toolbar = QToolBar()
+        self.toolbar.setStyleSheet("""
             QToolBar { 
                 background: rgba(50, 50, 50, 230);
                 border-radius: 5px;
@@ -135,14 +135,16 @@ class FloatingToolbar(QWidget):
         # Add buttons
         color_button = QPushButton("Color")
         color_button.clicked.connect(parent.choose_color)
-        layout.addWidget(color_button)
+        self.toolbar.addWidget(color_button)
         
         clear_button = QPushButton("Clear")
         clear_button.clicked.connect(parent.clear_arrows)
-        layout.addWidget(clear_button)
+        self.toolbar.addWidget(clear_button)
+        
+        # Add toolbar to widget
+        self.toolbar.setParent(self)
         
         # Set size and position
-        self.setLayout(layout)
         self.adjustSize()
         self.move(10, 10)
 

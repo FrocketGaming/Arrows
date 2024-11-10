@@ -170,15 +170,20 @@ class FloatingToolbar(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         
+        # Create toolbar container
+        self.toolbar_container = QWidget()
+        self.toolbar_container.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Minimum
+        )
+        layout.addWidget(self.toolbar_container)
+        
         # Create toggle button
         self.toggle_button = QPushButton()
         self.toggle_button.setFixedSize(40, 20)
         self.toggle_button.clicked.connect(self.toggle_toolbar)
         self.update_toggle_button_icon(False)
         layout.addWidget(self.toggle_button)
-        
-        # Create toolbar container
-        self.toolbar_container = QWidget()
         self.toolbar_container.setSizePolicy(
             QSizePolicy.Policy.Preferred,
             QSizePolicy.Policy.Minimum
@@ -277,9 +282,9 @@ class FloatingToolbar(QWidget):
         
         # Draw arrow
         points = QPolygon([
-            QPoint(10, 14 if is_expanded else 6),
-            QPoint(20, 6 if is_expanded else 14),
-            QPoint(30, 14 if is_expanded else 6)
+            QPoint(10, 6 if is_expanded else 14),
+            QPoint(20, 14 if is_expanded else 6),
+            QPoint(30, 6 if is_expanded else 14)
         ])
         
         painter.setPen(QPen(QColor(200, 200, 200), 2))

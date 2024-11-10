@@ -1,6 +1,6 @@
 import sys
 import math
-from pynput import keyboard
+from keyboard_manager import KeyboardManager
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, 
                             QToolBar, QPushButton, QColorDialog,
                             QVBoxLayout, QSizePolicy)
@@ -248,30 +248,9 @@ def main():
     window = TransparentWindow()
     window.show()
     
-    # Track pressed keys
-    current_keys = set()
-    
-    def on_press(key):
-        try:
-            current_keys.add(key)
-            # Check for Ctrl+Alt+Shift+D
-            if (keyboard.Key.ctrl in current_keys and 
-                keyboard.Key.alt in current_keys and 
-                keyboard.Key.shift in current_keys and 
-                keyboard.KeyCode.from_char('d') in current_keys):
-                window.toggle_drawing_mode()
-        except Exception as e:
-            print(f"Error in key press handler: {e}")
-
-    def on_release(key):
-        try:
-            current_keys.discard(key)
-        except Exception as e:
-            print(f"Error in key release handler: {e}")
-
-    # Set up keyboard listener
-    listener = keyboard.Listener(on_press=on_press, on_release=on_release)
-    listener.start()
+    # Set up keyboard manager
+    keyboard_manager = KeyboardManager()
+    keyboard_manager.drawing_mode_toggled.connect(window.toggle_drawing_mode)
     
     # Start Qt event loop
     sys.exit(app.exec())

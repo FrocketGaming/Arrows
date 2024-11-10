@@ -1,5 +1,5 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QDesktopWidget
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
 from PyQt6.QtCore import Qt, QPoint, QRect
 from PyQt6.QtGui import QKeySequence, QShortcut, QPainter, QPen, QPixmap
 from PIL import ImageGrab

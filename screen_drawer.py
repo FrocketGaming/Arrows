@@ -117,13 +117,21 @@ class TransparentWindow(QMainWindow):
             self.raise_()
             self.toolbar.show()
             self.transparent_widget.update()
+            self.setFocus()
         else:
             self.drawing_mode = False
             self.toolbar.hide()
             self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
             self.show()
-            self.lower()
+            self.activateWindow()  # Keep window active even when transparent
+            self.setFocus()
             self.transparent_widget.update()
+            
+    def focusOutEvent(self, event):
+        """Ensure we regain focus when clicked in taskbar"""
+        super().focusOutEvent(event)
+        self.activateWindow()
+        self.setFocus()
         
 class TransparentWidget(QWidget):
     def __init__(self, parent=None):

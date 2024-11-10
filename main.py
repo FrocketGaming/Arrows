@@ -112,55 +112,71 @@ class ScreenDrawer:
         win32gui.SelectObject(hdc, old_pen)
         win32gui.DeleteObject(pen)
     
+    def create_window(self):
+        # Register window class
+        wc = win32gui.WNDCLASS()
+        wc.lpfnWndProc = self.wnd_proc
+        wc.lpszClassName = 'ScreenArrowClass'
+        win32gui.RegisterClass(wc)
+
+        # Create the window
+        self.current_window = win32gui.CreateWindowEx(
+            win32con.WS_EX_TOPMOST | win32con.WS_EX_LAYERED,
+            'ScreenArrowClass',
+            None,
+            win32con.WS_POPUP | win32con.WS_VISIBLE,
+            0, 0,
+            win32api.GetSystemMetrics(0),
+            win32api.GetSystemMetrics(1),
+            None, None, None, None
+        )
+        
+        # Make the window transparent
+        win32gui.SetLayeredWindowAttributes(
+            self.current_window, 0, 0, win32con.LWA_ALPHA
+        )
+
+    def wnd_proc(self, hwnd, msg, wparam, lparam):
+        if msg == win32con.WM_LBUTTONDOWN:
+            self.handle_mouse_click()
+        elif msg == win32con.WM_LBUTTONUP:
+            self.handle_mouse_release()
+        return win32gui.DefWindowProc(hwnd, msg, wparam, lparam)
+
     def draw_loop(self):
+        self.create_window()
+        
         while True:
-            # Create a fullscreen transparent window
-            hwnd = win32gui.CreateWindowEx(
-                win32con.WS_EX_TOPMOST | win32con.WS_EX_LAYERED,  # Removed WS_EX_TRANSPARENT to allow mouse input
-                'STATIC',
-                None,
-                win32con.WS_POPUP | win32con.WS_VISIBLE,
-                0, 0,
-                win32api.GetSystemMetrics(0),
-                win32api.GetSystemMetrics(1),
-                None, None, None, None
-            )
-            
-            # Make the window transparent
-            win32gui.SetLayeredWindowAttributes(
-                hwnd, 0, 0, win32con.LWA_ALPHA
-            )
-            
-            hdc = win32gui.GetDC(hwnd)
-            
-            # Remove expired arrows
-            current_time = time.time()
-            self.arrows = [arrow for arrow in self.arrows 
-                          if arrow.age < self.fade_duration]
-            
-            # Draw all active arrows
-            for arrow in self.arrows:
-                alpha = max(0, 1 - (arrow.age / self.fade_duration))
-                self.draw_arrow(hdc, arrow, alpha)
-            
-            # Draw current arrow if in drawing mode
-            if self.drawing_mode and self.drawing_start:
-                current_x, current_y = win32gui.GetCursorPos()
-                temp_arrow = Arrow(
-                    self.drawing_start[0],
-                    self.drawing_start[1],
-                    current_x,
-                    current_y,
-                    time.time()
-                )
-                self.draw_arrow(hdc, temp_arrow)
-            
-            win32gui.ReleaseDC(hwnd, hdc)
-            # Store current window handle
-            self.current_window = hwnd
-            
-            win32gui.DestroyWindow(hwnd)
-            self.current_window = None
+            if self.current_window:
+                hdc = win32gui.GetDC(self.current_window)
+                
+                # Clear previous content
+                rect = win32gui.GetClientRect(self.current_window)
+                win32gui.FillRect(hdc, rect, win32gui.GetStockObject(win32con.BLACK_BRUSH))
+                
+                # Remove expired arrows
+                current_time = time.time()
+                self.arrows = [arrow for arrow in self.arrows 
+                              if arrow.age < self.fade_duration]
+                
+                # Draw all active arrows
+                for arrow in self.arrows:
+                    alpha = max(0, 1 - (arrow.age / self.fade_duration))
+                    self.draw_arrow(hdc, arrow, alpha)
+                
+                # Draw current arrow if in drawing mode
+                if self.drawing_mode and self.drawing_start:
+                    current_x, current_y = win32gui.GetCursorPos()
+                    temp_arrow = Arrow(
+                        self.drawing_start[0],
+                        self.drawing_start[1],
+                        current_x,
+                        current_y,
+                        time.time()
+                    )
+                    self.draw_arrow(hdc, temp_arrow)
+                
+                win32gui.ReleaseDC(self.current_window, hdc)
             
             time.sleep(1/60)  # ~60 FPS
 

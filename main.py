@@ -117,14 +117,19 @@ class ScreenDrawer:
         wc = win32gui.WNDCLASS()
         wc.lpfnWndProc = self.wnd_proc
         wc.lpszClassName = 'ScreenArrowClass'
-        win32gui.RegisterClass(wc)
+        wc.hbrBackground = win32gui.GetStockObject(win32con.HOLLOW_BRUSH)
+        wc.hCursor = win32gui.LoadCursor(0, win32con.IDC_ARROW)
+        try:
+            win32gui.RegisterClass(wc)
+        except win32gui.error:
+            pass  # Class already registered
 
         # Create the window
         self.current_window = win32gui.CreateWindowEx(
-            win32con.WS_EX_TOPMOST | win32con.WS_EX_LAYERED,
+            win32con.WS_EX_TOPMOST | win32con.WS_EX_LAYERED | win32con.WS_EX_TRANSPARENT,
             'ScreenArrowClass',
-            None,
-            win32con.WS_POPUP | win32con.WS_VISIBLE,
+            'Screen Arrow',
+            win32con.WS_POPUP,
             0, 0,
             win32api.GetSystemMetrics(0),
             win32api.GetSystemMetrics(1),
@@ -133,52 +138,63 @@ class ScreenDrawer:
         
         # Make the window transparent
         win32gui.SetLayeredWindowAttributes(
-            self.current_window, 0, 0, win32con.LWA_ALPHA
+            self.current_window, 0, 1, win32con.LWA_ALPHA
         )
 
     def wnd_proc(self, hwnd, msg, wparam, lparam):
-        if msg == win32con.WM_LBUTTONDOWN:
+        if msg == win32con.WM_DESTROY:
+            win32gui.PostQuitMessage(0)
+            return 0
+        elif msg == win32con.WM_LBUTTONDOWN and self.drawing_mode:
             self.handle_mouse_click()
-        elif msg == win32con.WM_LBUTTONUP:
+        elif msg == win32con.WM_LBUTTONUP and self.drawing_mode:
             self.handle_mouse_release()
+        elif msg == win32con.WM_PAINT:
+            self.paint_window(hwnd)
+            return 0
         return win32gui.DefWindowProc(hwnd, msg, wparam, lparam)
+
+    def paint_window(self, hwnd):
+        ps = win32gui.PAINTSTRUCT()
+        hdc = win32gui.BeginPaint(hwnd, ps)
+        
+        # Clear previous content with transparency
+        rect = win32gui.GetClientRect(hwnd)
+        win32gui.FillRect(hdc, rect, win32gui.GetStockObject(win32con.HOLLOW_BRUSH))
+        
+        # Draw all active arrows
+        current_time = time.time()
+        self.arrows = [arrow for arrow in self.arrows if arrow.age < self.fade_duration]
+        for arrow in self.arrows:
+            alpha = max(0, 1 - (arrow.age / self.fade_duration))
+            self.draw_arrow(hdc, arrow, alpha)
+        
+        # Draw current arrow if in drawing mode
+        if self.drawing_mode and self.drawing_start:
+            current_x, current_y = win32gui.GetCursorPos()
+            temp_arrow = Arrow(
+                self.drawing_start[0],
+                self.drawing_start[1],
+                current_x,
+                current_y,
+                time.time()
+            )
+            self.draw_arrow(hdc, temp_arrow)
+            
+        win32gui.EndPaint(hwnd, ps)
 
     def draw_loop(self):
         self.create_window()
         
-        while True:
-            if self.current_window:
-                hdc = win32gui.GetDC(self.current_window)
-                
-                # Clear previous content
-                rect = win32gui.GetClientRect(self.current_window)
-                win32gui.FillRect(hdc, rect, win32gui.GetStockObject(win32con.BLACK_BRUSH))
-                
-                # Remove expired arrows
-                current_time = time.time()
-                self.arrows = [arrow for arrow in self.arrows 
-                              if arrow.age < self.fade_duration]
-                
-                # Draw all active arrows
-                for arrow in self.arrows:
-                    alpha = max(0, 1 - (arrow.age / self.fade_duration))
-                    self.draw_arrow(hdc, arrow, alpha)
-                
-                # Draw current arrow if in drawing mode
-                if self.drawing_mode and self.drawing_start:
-                    current_x, current_y = win32gui.GetCursorPos()
-                    temp_arrow = Arrow(
-                        self.drawing_start[0],
-                        self.drawing_start[1],
-                        current_x,
-                        current_y,
-                        time.time()
-                    )
-                    self.draw_arrow(hdc, temp_arrow)
-                
-                win32gui.ReleaseDC(self.current_window, hdc)
+        # Message loop
+        msg = win32gui.MSG()
+        while win32gui.GetMessage(msg, 0, 0, 0):
+            win32gui.TranslateMessage(msg)
+            win32gui.DispatchMessage(msg)
             
-            time.sleep(1/60)  # ~60 FPS
+            # Force redraw
+            if self.current_window:
+                win32gui.InvalidateRect(self.current_window, None, True)
 
 def main():
     drawer = ScreenDrawer()

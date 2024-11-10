@@ -51,7 +51,9 @@ class TransparentWidget(QWidget):
             self.drawing = True
             self.start_point = event.pos()
             self.end_point = event.pos()
+            print(f"Drawing mode: {self.parent().drawing_mode}")
             print(f"Mouse press at: {self.start_point.x()}, {self.start_point.y()}")
+            self.update()  # Force immediate update
             
     def mouseMoveEvent(self, event):
         if self.drawing:
@@ -71,13 +73,15 @@ class TransparentWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
-        # Draw semi-transparent background when not in drawing mode
-        if not self.parent().drawing_mode:
-            painter.fillRect(self.rect(), QColor(200, 200, 200, 30))
+        # Always draw a semi-transparent background
+        if self.parent().drawing_mode:
+            painter.fillRect(self.rect(), QColor(0, 255, 0, 30))  # Green tint when drawing mode
+        else:
+            painter.fillRect(self.rect(), QColor(200, 200, 200, 50))  # More visible gray
         
         # Set pen for drawing
         pen = QPen(QColor(255, 0, 0))  # Red color
-        pen.setWidth(2)
+        pen.setWidth(4)  # Make lines thicker
         painter.setPen(pen)
         
         # Draw all saved arrows

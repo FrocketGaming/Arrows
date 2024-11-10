@@ -171,16 +171,21 @@ class FloatingToolbar(QWidget):
             | Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.WindowStaysOnTopHint
         )
+        
+        # Set widget attributes for transparency
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
 
         # Create main layout
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Make the main widget transparent
+        # Make the main widget and all children transparent
         self.setStyleSheet("""
-            QWidget {
+            FloatingToolbar, QWidget {
                 background: transparent;
+                border: none;
             }
         """)
 

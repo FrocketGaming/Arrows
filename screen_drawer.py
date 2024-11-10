@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget,
                             QVBoxLayout, QSizePolicy)
 from PyQt6.QtCore import Qt, QPoint, QTimer
 from PyQt6.QtGui import QPainter, QPen, QColor, QIcon
+from arrow_icons import create_arrow_icon
 
 class TransparentWindow(QMainWindow):
     def __init__(self):
@@ -34,8 +35,14 @@ class TransparentWindow(QMainWindow):
         screen = QApplication.primaryScreen().geometry()
         self.setGeometry(screen)
         
-        # Initialize arrows list
+        # Initialize arrows list with tuples: (start, end, color, creation_time, is_dissolving)
         self.arrows = []
+        self.current_arrow_type = 'normal'  # or 'dissolving'
+        
+        # Set up timer for dissolving arrows
+        self.fade_timer = QTimer()
+        self.fade_timer.timeout.connect(self.update_dissolving_arrows)
+        self.fade_timer.start(100)  # Update every 100ms
         
         # Create floating toolbar window
         self.toolbar = FloatingToolbar(self)
@@ -65,6 +72,21 @@ class TransparentWindow(QMainWindow):
     def clear_arrows(self):
         self.arrows.clear()
         self.transparent_widget.update()
+        
+    def set_arrow_type(self, arrow_type):
+        self.current_arrow_type = arrow_type
+        
+    def update_dissolving_arrows(self):
+        current_time = QApplication.instance().startTimer()
+        updated = False
+        
+        # Filter out arrows that have exceeded their 4-second lifetime
+        self.arrows = [arrow for arrow in self.arrows 
+                      if not arrow[4] or  # Keep normal arrows
+                      (arrow[4] and current_time - arrow[3] < 4000)]  # Keep dissolving arrows within time
+        
+        if updated:
+            self.transparent_widget.update()
         
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
@@ -162,6 +184,18 @@ class FloatingToolbar(QWidget):
         """)
         
         # Add buttons
+        normal_arrow_button = QPushButton()
+        normal_arrow_button.setIcon(create_arrow_icon())
+        normal_arrow_button.setToolTip("Normal Arrow")
+        normal_arrow_button.clicked.connect(lambda: parent.set_arrow_type('normal'))
+        self.toolbar.addWidget(normal_arrow_button)
+        
+        dissolving_arrow_button = QPushButton()
+        dissolving_arrow_button.setIcon(create_arrow_icon(dissolving=True))
+        dissolving_arrow_button.setToolTip("Dissolving Arrow")
+        dissolving_arrow_button.clicked.connect(lambda: parent.set_arrow_type('dissolving'))
+        self.toolbar.addWidget(dissolving_arrow_button)
+        
         color_button = QPushButton("Color")
         color_button.clicked.connect(parent.choose_color)
         self.toolbar.addWidget(color_button)
@@ -207,8 +241,16 @@ class TransparentWidget(QWidget):
         if event.button() == Qt.MouseButton.LeftButton and self.drawing:
             self.drawing = False
             if self.start_point and self.end_point:
-                # Store arrow with its color
-                self.parent().arrows.append((self.start_point, self.end_point, self.parent().current_color))
+                # Store arrow with its color, creation time, and type
+                current_time = QApplication.instance().startTimer()
+                is_dissolving = self.parent().current_arrow_type == 'dissolving'
+                self.parent().arrows.append((
+                    self.start_point, 
+                    self.end_point, 
+                    self.parent().current_color,
+                    current_time,
+                    is_dissolving
+                ))
                 print(f"Arrow added: from ({self.start_point.x()}, {self.start_point.y()}) to ({self.end_point.x()}, {self.end_point.y()})")
                 print(f"Total arrows: {len(self.parent().arrows)}")
             self.update()
@@ -226,8 +268,18 @@ class TransparentWidget(QWidget):
         pen.setWidth(4)  # Make lines thicker
         painter.setPen(pen)
         
-        # Draw all saved arrows with their colors
-        for start, end, color in self.parent().arrows:
+        # Draw all saved arrows with their colors and opacity
+        current_time = QApplication.instance().startTimer()
+        for start, end, color, creation_time, is_dissolving in self.parent().arrows:
+            if is_dissolving:
+                age = current_time - creation_time
+                if age >= 4000:  # 4 seconds
+                    continue
+                opacity = 1.0 - (age / 4000.0)
+                painter.setOpacity(opacity)
+            else:
+                painter.setOpacity(1.0)
+                
             pen.setColor(color)
             painter.setPen(pen)
             self.draw_arrow(painter, start, end)

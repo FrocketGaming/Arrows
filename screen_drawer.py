@@ -251,17 +251,32 @@ def main():
     current = set()
     
     def on_press(key):
-        if any([key in combo for combo in COMBINATIONS]):
+        try:
             print(f"Key pressed: {key}")
-            current.add(key)
+            # Handle the 'd' key press
+            if hasattr(key, 'char') and key.char in ['d', 'D']:
+                current.add(keyboard.KeyCode(char=key.char))
+            else:
+                current.add(key)
+            
             print(f"Current keys held: {current}")
-            if any(all(k in current for k in combo) for combo in COMBINATIONS):
-                print("Hotkey combination detected!")
-                window.toggle_drawing_mode()
+            
+            # Check if we have a valid combination
+            for combo in COMBINATIONS:
+                if all(k in current for k in combo):
+                    print("Hotkey combination detected!")
+                    window.toggle_drawing_mode()
+                    return
     
     def on_release(key):
-        if any([key in combo for combo in COMBINATIONS]):
-            current.discard(key)
+        try:
+            # Handle the 'd' key release
+            if hasattr(key, 'char') and key.char in ['d', 'D']:
+                current.discard(keyboard.KeyCode(char=key.char))
+            else:
+                current.discard(key)
+        except KeyError:
+            pass
     
     # Set up listener
     listener = keyboard.Listener(on_press=on_press, on_release=on_release)

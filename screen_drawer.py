@@ -129,12 +129,6 @@ class TransparentWindow(QMainWindow):
                 self.show()
                 self.clearFocus()
                 
-            # Update cursor based on drawing mode
-            if self.drawing_mode:
-                self.transparent_widget.setCursor(Qt.CursorShape.CrossCursor)
-            else:
-                self.transparent_widget.setCursor(Qt.CursorShape.ArrowCursor)
-                
             self.transparent_widget.update()
             
         except Exception as e:
@@ -241,9 +235,19 @@ class TransparentWidget(QWidget):
         self.start_point = None
         self.end_point = None
         self.drawing = False
+        self.default_cursor = Qt.CursorShape.ArrowCursor
+        self.drawing_cursor = Qt.CursorShape.CrossCursor
+        self.setCursor(self.default_cursor)
+
+    def update_cursor(self):
+        if self.parent().drawing_mode:
+            self.setCursor(self.drawing_cursor)
+        else:
+            self.setCursor(self.default_cursor)
         
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and self.parent().drawing_mode:
+            self.update_cursor()
             self.drawing = True
             self.start_point = event.pos()
             self.end_point = event.pos()

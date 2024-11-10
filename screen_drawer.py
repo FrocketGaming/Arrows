@@ -181,7 +181,7 @@ class FloatingToolbar(QWidget):
         self.toolbar_container = QWidget()
         self.toolbar_container.setStyleSheet("""
             QWidget {
-                background: rgb(40, 40, 40);
+                background: transparent;
                 border-radius: 5px;
             }
         """)

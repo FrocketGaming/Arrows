@@ -30,11 +30,18 @@ class ScreenDrawer:
         self.drawing_start: Optional[Tuple[int, int]] = None
         self.arrows: list[Arrow] = []
         self.fade_duration = 4.0  # seconds
+        self.current_window = None
         
     def toggle_drawing_mode(self):
         self.drawing_mode = not self.drawing_mode
         if not self.drawing_mode:
             self.drawing_start = None
+        else:
+            # Small delay to allow the window to be created
+            time.sleep(0.1)
+            if self.current_window:
+                win32gui.SetForegroundWindow(self.current_window)
+        
         # Show popup notification
         status = "ENABLED" if self.drawing_mode else "DISABLED"
         win32api.MessageBox(0, f"Drawing mode {status}", "Screen Arrow", MB_ICONINFORMATION)
@@ -142,7 +149,11 @@ class ScreenDrawer:
                 self.draw_arrow(hdc, temp_arrow)
             
             win32gui.ReleaseDC(hwnd, hdc)
+            # Store current window handle
+            self.current_window = hwnd
+            
             win32gui.DestroyWindow(hwnd)
+            self.current_window = None
             
             time.sleep(1/60)  # ~60 FPS
 

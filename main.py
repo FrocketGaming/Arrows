@@ -116,7 +116,7 @@ class ScreenDrawer:
         while True:
             # Create a fullscreen transparent window
             hwnd = win32gui.CreateWindowEx(
-                win32con.WS_EX_TRANSPARENT | win32con.WS_EX_TOPMOST | win32con.WS_EX_LAYERED,
+                win32con.WS_EX_TOPMOST | win32con.WS_EX_LAYERED,  # Removed WS_EX_TRANSPARENT to allow mouse input
                 'STATIC',
                 None,
                 win32con.WS_POPUP | win32con.WS_VISIBLE,

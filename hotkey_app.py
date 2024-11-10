@@ -5,6 +5,7 @@ from PyQt6.QtGui import QKeySequence, QShortcut, QPainter, QPen
 import keyboard
 import win32gui
 import win32con
+import win32process
 
 class DrawingWidget(QWidget):
     def __init__(self):
@@ -106,9 +107,9 @@ class MainWindow(QMainWindow):
             # Get current foreground window
             current_hwnd = win32gui.GetForegroundWindow()
             # Get current thread
-            current_thread = win32gui.GetWindowThreadProcessId(current_hwnd)[0]
+            current_thread = win32process.GetWindowThreadProcessId(current_hwnd)[0]
             # Get app's thread
-            app_thread = win32gui.GetWindowThreadProcessId(hwnd)[0]
+            app_thread = win32process.GetWindowThreadProcessId(hwnd)[0]
             
             # Attach threads if necessary
             if current_thread != app_thread:

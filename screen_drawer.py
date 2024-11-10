@@ -4,7 +4,7 @@ from pynput import keyboard
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, 
                             QToolBar, QPushButton, QColorDialog,
                             QVBoxLayout, QSizePolicy)
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtCore import Qt, QPoint, QTimer
 from PyQt6.QtGui import QPainter, QPen, QColor, QIcon
 
 class TransparentWindow(QMainWindow):
@@ -72,19 +72,19 @@ class TransparentWindow(QMainWindow):
                 self.setWindowFlags(self.drawing_flags)
                 self.show()
                 
-                # Show toolbar after main window
-                QApplication.processEvents()  # Let the main window show first
-                self.toolbar.show()
+                # Use timer to sequence the window operations
+                def show_and_raise():
+                    self.toolbar.show()
+                    self.raise_()
+                    self.activateWindow()
+                    QApplication.setActiveWindow(self)
+                    self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
+                    self.toolbar.raise_()
+                    self.toolbar.activateWindow()
                 
-                # Force window to top and activate
-                self.raise_()
-                self.activateWindow()
-                QApplication.setActiveWindow(self)
-                self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
+                # Schedule the window operations
+                QTimer.singleShot(100, show_and_raise)
                 
-                # Ensure toolbar is visible and on top
-                self.toolbar.raise_()
-                self.toolbar.activateWindow()
             else:
                 # Disable drawing mode
                 self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)

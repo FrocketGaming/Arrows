@@ -267,6 +267,8 @@ def main():
                     print("Hotkey combination detected!")
                     window.toggle_drawing_mode()
                     return
+        except Exception as e:
+            print(f"Error in on_press: {e}")
     
     def on_release(key):
         try:
@@ -277,6 +279,8 @@ def main():
                 current.discard(key)
         except KeyError:
             pass
+        except Exception as e:
+            print(f"Error in on_release: {e}")
     
     # Set up listener
     listener = keyboard.Listener(on_press=on_press, on_release=on_release)

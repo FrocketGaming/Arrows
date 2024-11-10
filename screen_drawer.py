@@ -307,6 +307,35 @@ class FloatingToolbar(QWidget):
         if target_height == 0:
             self.toolbar_container.hide()
 
+    def setup_toolbar_buttons(self):
+        """Set up all toolbar buttons"""
+        self.normal_arrow_button = QPushButton()
+        self.normal_arrow_button.setIcon(create_arrow_icon())
+        self.normal_arrow_button.setToolTip("Normal Arrow")
+        self.normal_arrow_button.setCheckable(True)
+        self.normal_arrow_button.setChecked(True)
+        self.normal_arrow_button.clicked.connect(
+            lambda: self.handle_arrow_selection("normal")
+        )
+        self.toolbar.addWidget(self.normal_arrow_button)
+
+        self.dissolving_arrow_button = QPushButton()
+        self.dissolving_arrow_button.setIcon(create_arrow_icon(dissolving=True))
+        self.dissolving_arrow_button.setToolTip("Dissolving Arrow")
+        self.dissolving_arrow_button.setCheckable(True)
+        self.dissolving_arrow_button.clicked.connect(
+            lambda: self.handle_arrow_selection("dissolving")
+        )
+        self.toolbar.addWidget(self.dissolving_arrow_button)
+
+        color_button = QPushButton("Color")
+        color_button.clicked.connect(self.parent().choose_color)
+        self.toolbar.addWidget(color_button)
+
+        clear_button = QPushButton("Clear")
+        clear_button.clicked.connect(self.parent().clear_arrows)
+        self.toolbar.addWidget(clear_button)
+
     def handle_arrow_selection(self, arrow_type):
         """Handle arrow type selection and button states"""
         if arrow_type == "normal":
@@ -446,31 +475,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    def setup_toolbar_buttons(self):
-        """Set up all toolbar buttons"""
-        self.normal_arrow_button = QPushButton()
-        self.normal_arrow_button.setIcon(create_arrow_icon())
-        self.normal_arrow_button.setToolTip("Normal Arrow")
-        self.normal_arrow_button.setCheckable(True)
-        self.normal_arrow_button.setChecked(True)
-        self.normal_arrow_button.clicked.connect(
-            lambda: self.handle_arrow_selection("normal")
-        )
-        self.toolbar.addWidget(self.normal_arrow_button)
-
-        self.dissolving_arrow_button = QPushButton()
-        self.dissolving_arrow_button.setIcon(create_arrow_icon(dissolving=True))
-        self.dissolving_arrow_button.setToolTip("Dissolving Arrow")
-        self.dissolving_arrow_button.setCheckable(True)
-        self.dissolving_arrow_button.clicked.connect(
-            lambda: self.handle_arrow_selection("dissolving")
-        )
-        self.toolbar.addWidget(self.dissolving_arrow_button)
-
-        color_button = QPushButton("Color")
-        color_button.clicked.connect(self.parent().choose_color)
-        self.toolbar.addWidget(color_button)
-
-        clear_button = QPushButton("Clear")
-        clear_button.clicked.connect(self.parent().clear_arrows)
-        self.toolbar.addWidget(clear_button)

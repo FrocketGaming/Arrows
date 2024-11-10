@@ -56,7 +56,7 @@ class TransparentWindow(QMainWindow):
 
         # Create floating toolbar window
         self.toolbar = FloatingToolbar(self)
-        self.toolbar.show()  # Show the toolbar immediately
+        # Don't show toolbar initially since we start in non-drawing mode
 
         # Initialize current color
         self.current_color = QColor(255, 0, 0)  # Default red
@@ -123,6 +123,9 @@ class TransparentWindow(QMainWindow):
                 )
                 self.setWindowFlags(self.drawing_flags)
                 self.show()
+                # Show toolbar and ensure it's collapsed
+                self.toolbar.is_expanded = True  # Force it to collapse
+                self.toolbar.toggle_toolbar()    # Collapse it
                 self.toolbar.show()
                 self.raise_()
                 self.activateWindow()
@@ -132,6 +135,9 @@ class TransparentWindow(QMainWindow):
                 # Disable drawing mode
                 self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
                 self.setWindowFlags(self.inactive_flags)
+                # Ensure toolbar is collapsed before hiding
+                if self.toolbar.is_expanded:
+                    self.toolbar.toggle_toolbar()
                 self.toolbar.hide()
                 self.show()
                 self.clearFocus()
@@ -300,10 +306,17 @@ class FloatingToolbar(QWidget):
         
         self.animation.setStartValue(self.toolbar_container.height())
         self.animation.setEndValue(target_height)
+        
+        # Set both min and max height before starting animation
+        self.toolbar_container.setMinimumHeight(self.toolbar_container.height())
+        self.toolbar_container.setMaximumHeight(self.toolbar_container.height())
+        
         self.animation.start()
         
-        # Update both min and max height
+        # Update heights after animation starts
+        self.toolbar_container.setMinimumHeight(target_height)
         self.toolbar_container.setMaximumHeight(target_height)
+        
         self.update_toggle_button_icon(self.is_expanded)
 
     def handle_arrow_selection(self, arrow_type):

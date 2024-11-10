@@ -73,11 +73,9 @@ class TransparentWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
-        # Always draw a semi-transparent background
+        # Only show background in drawing mode
         if self.parent().drawing_mode:
             painter.fillRect(self.rect(), QColor(0, 255, 0, 30))  # Green tint when drawing mode
-        else:
-            painter.fillRect(self.rect(), QColor(200, 200, 200, 50))  # More visible gray
         
         # Set pen for drawing
         pen = QPen(QColor(255, 0, 0))  # Red color

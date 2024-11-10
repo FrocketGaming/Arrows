@@ -36,18 +36,21 @@ class ScreenDrawer:
         self.drawing_mode = not self.drawing_mode
         if not self.drawing_mode:
             self.drawing_start = None
-        else:
-            # Small delay to allow the window to be created
-            time.sleep(0.1)
             if self.current_window:
-                try:
-                    # Try to force the window to be visible and active
-                    win32gui.ShowWindow(self.current_window, win32con.SW_SHOW)
-                    win32gui.SetWindowPos(self.current_window, win32con.HWND_TOPMOST, 0, 0, 0, 0,
-                                        win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_SHOWWINDOW)
-                    win32gui.SetForegroundWindow(self.current_window)
-                except Exception as e:
-                    print(f"Failed to set window focus: {e}")
+                win32gui.ShowWindow(self.current_window, win32con.SW_HIDE)
+        else:
+            if self.current_window:
+                # Make window visible and bring to front
+                win32gui.ShowWindow(self.current_window, win32con.SW_SHOW)
+                win32gui.SetWindowPos(
+                    self.current_window,
+                    win32con.HWND_TOPMOST,
+                    0, 0, 0, 0,
+                    win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_SHOWWINDOW
+                )
+                # Ensure window is active
+                win32gui.SetForegroundWindow(self.current_window)
+                win32gui.SetActiveWindow(self.current_window)
         
         # Show popup notification
         status = "ENABLED" if self.drawing_mode else "DISABLED"
@@ -125,20 +128,24 @@ class ScreenDrawer:
             pass  # Class already registered
 
         # Create the window
+        screen_width = win32api.GetSystemMetrics(0)
+        screen_height = win32api.GetSystemMetrics(1)
+        
         self.current_window = win32gui.CreateWindowEx(
-            win32con.WS_EX_TOPMOST | win32con.WS_EX_LAYERED | win32con.WS_EX_TRANSPARENT,
+            win32con.WS_EX_TOPMOST | win32con.WS_EX_LAYERED | win32con.WS_EX_TRANSPARENT | win32con.WS_EX_TOOLWINDOW,
             'ScreenArrowClass',
             'Screen Arrow',
-            win32con.WS_POPUP,
-            0, 0,
-            win32api.GetSystemMetrics(0),
-            win32api.GetSystemMetrics(1),
+            win32con.WS_POPUP | win32con.WS_VISIBLE,
+            0, 0, screen_width, screen_height,
             None, None, None, None
         )
         
-        # Make the window transparent
+        # Set the window to be transparent but capture mouse events
         win32gui.SetLayeredWindowAttributes(
-            self.current_window, 0, 1, win32con.LWA_ALPHA
+            self.current_window, 
+            win32api.RGB(255, 255, 255),  # Color key
+            128,  # Alpha (0-255)
+            win32con.LWA_ALPHA
         )
 
     def wnd_proc(self, hwnd, msg, wparam, lparam):

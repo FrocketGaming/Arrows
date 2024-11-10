@@ -21,9 +21,11 @@ class TransparentWindow(QMainWindow):
             Qt.WindowType.WindowStaysOnTopHint |
             Qt.WindowType.Tool |
             Qt.WindowType.X11BypassWindowManagerHint |
-            Qt.WindowType.MaximizeUsingFullscreenGeometryHint
+            Qt.WindowType.MaximizeUsingFullscreenGeometryHint |
+            Qt.WindowType.SubWindow
         )
         self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
+        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         self.drawing_mode = False
         
         # Create transparent widget
@@ -114,11 +116,10 @@ class TransparentWindow(QMainWindow):
     def toggle_drawing_mode(self):
         if not self.drawing_mode:
             self.drawing_mode = True
-            self.setWindowFlags(self.base_flags)
+            self.setWindowFlags(self.base_flags & ~Qt.WindowType.WindowTransparentForInput)
             self.show()
             self.activateWindow()
             self.raise_()
-            self.setWindowState(Qt.WindowState.WindowActive)
             self.toolbar.show()
             self.transparent_widget.update()
         else:
@@ -127,7 +128,7 @@ class TransparentWindow(QMainWindow):
             self.clearFocus()
             self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
             self.show()
-            self.lower()
+            self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
             self.transparent_widget.update()
         
 class TransparentWidget(QWidget):

@@ -1,6 +1,5 @@
 import sys
 import math
-import keyboard
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, 
                             QToolBar, QPushButton, QColorDialog,
                             QVBoxLayout, QSizePolicy)
@@ -233,8 +232,10 @@ def main():
     window = TransparentWindow()
     window.show()
     
-    # Register global hotkey
-    keyboard.add_hotkey('ctrl+alt+shift+d', window.toggle_drawing_mode)
+    # Create shortcut using Qt
+    from PyQt6.QtGui import QShortcut, QKeySequence
+    shortcut = QShortcut(QKeySequence('Ctrl+Alt+Shift+D'), window)
+    shortcut.activated.connect(window.toggle_drawing_mode)
     
     sys.exit(app.exec())
 

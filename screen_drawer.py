@@ -19,7 +19,8 @@ class TransparentWindow(QMainWindow):
         
         self.base_flags = (
             Qt.WindowType.FramelessWindowHint | 
-            Qt.WindowType.WindowStaysOnTopHint
+            Qt.WindowType.WindowStaysOnTopHint |
+            Qt.WindowType.Tool  # Removes from taskbar
         )
         self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
         self.drawing_mode = False
@@ -80,19 +81,22 @@ class TransparentWindow(QMainWindow):
             self.drawing_mode = True
             self.setWindowFlags(self.base_flags)
             self.show()
-            self.activateWindow()
-            self.raise_()
             self.toolbar.show()
             self.transparent_widget.update()
+            
+            # Force focus and raise window
+            self.raise_()
+            self.activateWindow()
             QApplication.setActiveWindow(self)
             self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
+            
+            # Also raise toolbar
+            self.toolbar.raise_()
         else:
             self.drawing_mode = False
             self.toolbar.hide()
             self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
             self.show()
-            QApplication.setActiveWindow(self)
-            self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
             self.transparent_widget.update()
             
     def focusOutEvent(self, event):

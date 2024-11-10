@@ -315,8 +315,12 @@ class FloatingToolbar(QWidget):
         self.is_expanded = not self.is_expanded
         
         if self.is_expanded:
+            # Calculate proper height based on toolbar's sizeHint
+            target_height = self.toolbar.sizeHint().height() + 10  # Add padding
+            self.toolbar_container.setMaximumHeight(target_height)
             self.toolbar_container.show()
         else:
+            self.toolbar_container.setMaximumHeight(0)
             self.toolbar_container.hide()
             
         self.update_toggle_button_icon(self.is_expanded)

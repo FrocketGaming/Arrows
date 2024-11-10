@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
 )
 from PyQt6.QtCore import Qt, QPoint, QTimer, QTime, QPropertyAnimation, QEasingCurve
-from PyQt6.QtGui import QPainter, QPen, QColor, QIcon, QPolygon
+from PyQt6.QtGui import QPainter, QPen, QColor, QIcon, QPolygon, QPixmap
 from arrow_icons import create_arrow_icon
 
 

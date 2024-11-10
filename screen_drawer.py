@@ -226,7 +226,6 @@ class FloatingToolbar(QWidget):
             self.normal_arrow_button.setChecked(False)
             self.dissolving_arrow_button.setChecked(True)
         self.parent().set_arrow_type(arrow_type)
-        self.setLayout(layout)
         
         # Set size and position
         self.adjustSize()

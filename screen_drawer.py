@@ -263,7 +263,11 @@ class FloatingToolbar(QWidget):
             QSizePolicy.Policy.Fixed,
             QSizePolicy.Policy.Fixed
         )
-        toolbar_layout.addWidget(self.toolbar)
+        # Create layout for toolbar container and add toolbar to it
+        container_layout = QVBoxLayout(self.toolbar_container)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+        container_layout.setSpacing(0)
+        container_layout.addWidget(self.toolbar)
         
         # Set fixed width to accommodate all buttons
         self.toolbar.setFixedWidth(200)

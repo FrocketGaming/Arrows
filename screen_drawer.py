@@ -1,6 +1,5 @@
 import sys
 import math
-import keyboard
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, 
                             QToolBar, QPushButton, QColorDialog)
 from PyQt6.QtCore import Qt, QPoint
@@ -12,8 +11,11 @@ class TransparentWindow(QMainWindow):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
         
-        # Set up global hotkey
-        keyboard.on_press_key('d', self.handle_hotkey, suppress=True)
+        # Initialize hotkey state
+        self.ctrl_pressed = False
+        self.alt_pressed = False
+        self.shift_pressed = False
+        
         self.base_flags = (
             Qt.WindowType.FramelessWindowHint | 
             Qt.WindowType.WindowStaysOnTopHint |
@@ -89,23 +91,44 @@ class TransparentWindow(QMainWindow):
         self.arrows.clear()
         self.transparent_widget.update()
         
-    def handle_hotkey(self, e):
-        if keyboard.is_pressed('ctrl+alt+shift'):
-            if not self.drawing_mode:
-                self.drawing_mode = True
-                self.setWindowFlags(self.base_flags)
-                self.show()
-                self.activateWindow()
-                self.raise_()
-                self.setWindowState(Qt.WindowState.WindowActive)
-                self.toolbar.show()
-            else:
-                self.drawing_mode = False
-                self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
-                self.show()
-                self.clearFocus()
-                self.toolbar.hide()
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            self.arrows.clear()
             self.transparent_widget.update()
+        elif event.key() == Qt.Key.Key_Control:
+            self.ctrl_pressed = True
+        elif event.key() == Qt.Key.Key_Alt:
+            self.alt_pressed = True
+        elif event.key() == Qt.Key.Key_Shift:
+            self.shift_pressed = True
+        elif event.key() == Qt.Key.Key_D:
+            if self.ctrl_pressed and self.alt_pressed and self.shift_pressed:
+                self.toggle_drawing_mode()
+                
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key.Key_Control:
+            self.ctrl_pressed = False
+        elif event.key() == Qt.Key.Key_Alt:
+            self.alt_pressed = False
+        elif event.key() == Qt.Key.Key_Shift:
+            self.shift_pressed = False
+            
+    def toggle_drawing_mode(self):
+        if not self.drawing_mode:
+            self.drawing_mode = True
+            self.setWindowFlags(self.base_flags)
+            self.show()
+            self.activateWindow()
+            self.raise_()
+            self.setWindowState(Qt.WindowState.WindowActive)
+            self.toolbar.show()
+        else:
+            self.drawing_mode = False
+            self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
+            self.show()
+            self.clearFocus()
+            self.toolbar.hide()
+        self.transparent_widget.update()
         
 class TransparentWidget(QWidget):
     def __init__(self, parent=None):

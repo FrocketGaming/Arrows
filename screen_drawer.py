@@ -172,21 +172,22 @@ class FloatingToolbar(QWidget):
             | Qt.WindowType.WindowStaysOnTopHint
         )
         
-        # Create main widget to hold everything
-        self.main_widget = QWidget(self)
-        self.main_layout = QVBoxLayout(self.main_widget)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
-        self.main_layout.setSpacing(0)
-        
-        # Create toolbar container first (at top)
+        # Create main layout
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # Create toolbar container
         self.toolbar_container = QWidget()
-        self.toolbar_container.setSizePolicy(
-            QSizePolicy.Policy.Fixed,
-            QSizePolicy.Policy.Fixed
-        )
-        self.main_layout.addWidget(self.toolbar_container)
-        
-        # Create toggle button (below toolbar)
+        self.toolbar_container.setStyleSheet("""
+            QWidget {
+                background: rgb(40, 40, 40);
+                border-radius: 5px;
+            }
+        """)
+        layout.addWidget(self.toolbar_container)
+
+        # Create toggle button
         self.toggle_button = QPushButton()
         self.toggle_button.setFixedSize(40, 20)
         self.toggle_button.clicked.connect(self.toggle_toolbar)
@@ -201,22 +202,7 @@ class FloatingToolbar(QWidget):
             }
         """)
         self.update_toggle_button_icon(False)
-        
-        # Add toggle button to main layout
-        self.main_layout.addWidget(self.toggle_button, 0, Qt.AlignmentFlag.AlignCenter)
-        
-        # Create toolbar layout
-        toolbar_layout = QVBoxLayout(self.toolbar_container)
-        toolbar_layout.setContentsMargins(0, 0, 0, 0)
-        toolbar_layout.setSpacing(0)
-        self.toolbar_container.setStyleSheet("""
-            QWidget {
-                background: rgb(40, 40, 40);
-                border-radius: 5px;
-            }
-        """)
-        # Initially hide the container
-        self.toolbar_container.hide()
+        layout.addWidget(self.toggle_button, 0, Qt.AlignmentFlag.AlignCenter)
         
         # Create toolbar
         self.toolbar = QToolBar()
@@ -325,38 +311,10 @@ class FloatingToolbar(QWidget):
         self.is_expanded = not self.is_expanded
         
         if self.is_expanded:
-            # Show container and prepare for expansion
             self.toolbar_container.show()
-            expanded_height = self.toolbar.sizeHint().height()
-            
-            # Configure animation
-            self.animation.setStartValue(0)
-            self.animation.setEndValue(expanded_height)
-            
-            # Set container constraints
-            self.toolbar_container.setMaximumHeight(expanded_height)
-            self.toolbar_container.setMinimumHeight(0)
         else:
-            # Prepare for collapse
-            current_height = self.toolbar_container.height()
-            self.animation.setStartValue(current_height)
-            self.animation.setEndValue(0)
-        
-        def animation_finished():
-            if not self.is_expanded:
-                self.toolbar_container.hide()
-                self.toolbar_container.setMaximumHeight(0)
-                self.toolbar_container.setMinimumHeight(0)
-        
-        # Disconnect any previous connections to avoid multiple calls
-        try:
-            self.animation.finished.disconnect()
-        except:
-            pass
+            self.toolbar_container.hide()
             
-        self.animation.finished.connect(animation_finished)
-        self.animation.start()
-        
         self.update_toggle_button_icon(self.is_expanded)
 
     def handle_arrow_selection(self, arrow_type):

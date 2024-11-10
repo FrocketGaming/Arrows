@@ -166,12 +166,12 @@ class FloatingToolbar(QWidget):
         self.toolbar = QToolBar()
         self.toolbar.setStyleSheet("""
             QToolBar { 
-                background: rgba(50, 50, 50, 230);
+                background: rgb(50, 50, 50);
                 border-radius: 5px;
                 padding: 2px;
             }
             QPushButton {
-                background: rgba(70, 70, 70, 230);
+                background: rgb(70, 70, 70);
                 border: 1px solid #555;
                 border-radius: 3px;
                 padding: 4px;
@@ -180,11 +180,11 @@ class FloatingToolbar(QWidget):
                 font-weight: bold;
             }
             QPushButton:hover {
-                background: rgba(90, 90, 90, 230);
+                background: rgb(90, 90, 90);
                 border-color: #666;
             }
             QPushButton:checked {
-                background: rgba(100, 100, 255, 230);
+                background: rgb(100, 100, 255);
                 border-color: #88f;
             }
         """)

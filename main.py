@@ -190,13 +190,21 @@ class ScreenDrawer:
         # Message loop
         while True:
             try:
-                if not win32gui.PumpWaitingMessages():
+                # Process all waiting messages
+                while win32gui.PumpWaitingMessages() == 0:
+                    pass
+                
+                # Check if window still exists
+                if not win32gui.IsWindow(self.current_window):
                     break
-                # Redraw periodically but not continuously
-                if self.current_window:
+                    
+                # Request redraw only if we have arrows or are drawing
+                if self.arrows or self.drawing_start:
                     win32gui.InvalidateRect(self.current_window, None, True)
+                    
                 time.sleep(0.016)  # ~60 FPS
-            except Exception:
+            except Exception as e:
+                print(f"Draw loop error: {e}")
                 break
 
 def main():

@@ -207,10 +207,12 @@ class FloatingToolbar(QWidget):
         toolbar_layout.setSpacing(0)
         self.toolbar_container.setStyleSheet("""
             QWidget {
-                background: rgb(50, 50, 50);
+                background: rgb(70, 70, 70);
                 border-radius: 5px;
             }
         """)
+        # Set initial height to match toggle button
+        self.toolbar_container.setFixedHeight(20)
         
         # Create toolbar
         self.toolbar = QToolBar()
@@ -319,8 +321,9 @@ class FloatingToolbar(QWidget):
         
         # Calculate heights
         expanded_height = self.toolbar.sizeHint().height()
+        collapsed_height = 20  # Same as toggle button height
         current_height = self.toolbar_container.height()
-        target_height = expanded_height if self.is_expanded else 0
+        target_height = expanded_height if self.is_expanded else collapsed_height
         
         # Configure animation
         self.animation.setStartValue(current_height)
@@ -331,9 +334,9 @@ class FloatingToolbar(QWidget):
         
         def animation_finished():
             if not self.is_expanded:
-                # When collapsed, set both min and max height to 0
-                self.toolbar_container.setMaximumHeight(0)
-                self.toolbar_container.setMinimumHeight(0)
+                # When collapsed, set height to match toggle button
+                self.toolbar_container.setMaximumHeight(collapsed_height)
+                self.toolbar_container.setMinimumHeight(collapsed_height)
             else:
                 # When expanded, allow the container to fit the content
                 self.toolbar_container.setMinimumHeight(target_height)

@@ -258,12 +258,12 @@ def main():
         return lambda k: f(k)
     
     # Set up listener with the hotkey
-    with keyboard.Listener(
+    listener = keyboard.Listener(
         on_press=for_canonical(hotkey.press),
-        on_release=for_canonical(hotkey.release)) as listener:
-        listener.join()
+        on_release=for_canonical(hotkey.release))
     listener.start()
     
+    # Start Qt event loop
     sys.exit(app.exec())
 
 if __name__ == '__main__':

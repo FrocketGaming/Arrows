@@ -233,40 +233,42 @@ def main():
     window = TransparentWindow()
     window.show()
     
-    # Create global hotkey
-    COMBINATIONS = [
-        # Left Ctrl combinations
-        {keyboard.Key.ctrl_l, keyboard.Key.alt_l, keyboard.Key.shift, keyboard.KeyCode(char='d')},
-        {keyboard.Key.ctrl_l, keyboard.Key.alt_l, keyboard.Key.shift, keyboard.KeyCode(char='D')},
-        {keyboard.Key.ctrl_l, keyboard.Key.alt_r, keyboard.Key.shift, keyboard.KeyCode(char='d')},
-        {keyboard.Key.ctrl_l, keyboard.Key.alt_r, keyboard.Key.shift, keyboard.KeyCode(char='D')},
-        # Right Ctrl combinations
-        {keyboard.Key.ctrl_r, keyboard.Key.alt_l, keyboard.Key.shift, keyboard.KeyCode(char='d')},
-        {keyboard.Key.ctrl_r, keyboard.Key.alt_l, keyboard.Key.shift, keyboard.KeyCode(char='D')},
-        {keyboard.Key.ctrl_r, keyboard.Key.alt_r, keyboard.Key.shift, keyboard.KeyCode(char='d')},
-        {keyboard.Key.ctrl_r, keyboard.Key.alt_r, keyboard.Key.shift, keyboard.KeyCode(char='D')}
-    ]
+    # Required modifier keys
+    REQUIRED_MODIFIERS = {keyboard.Key.ctrl_l, keyboard.Key.ctrl_r, 
+                         keyboard.Key.alt_l, keyboard.Key.alt_r,
+                         keyboard.Key.shift, keyboard.Key.shift_r}
+    
+    # The target key
+    TARGET_KEYS = {keyboard.KeyCode(char='d'), keyboard.KeyCode(char='D')}
     
     # Track currently pressed keys
     current = set()
     
     def on_press(key):
         try:
-            print(f"Key pressed: {key}")
-            # Handle the 'd' key press
-            if hasattr(key, 'char') and key.char in ['d', 'D']:
-                current.add(keyboard.KeyCode(char=key.char))
-            else:
-                current.add(key)
-            
+            print(f"Key pressed: {key}, Type: {type(key)}")
+            current.add(key)
             print(f"Current keys held: {current}")
             
-            # Check if we have a valid combination
-            for combo in COMBINATIONS:
-                if all(k in current for k in combo):
-                    print("Hotkey combination detected!")
-                    window.toggle_drawing_mode()
-                    return
+            # Count modifiers currently held
+            held_modifiers = current.intersection(REQUIRED_MODIFIERS)
+            print(f"Held modifiers: {held_modifiers}")
+            
+            # Check if we have at least one of each type of modifier
+            has_ctrl = any(k in current for k in [keyboard.Key.ctrl_l, keyboard.Key.ctrl_r])
+            has_alt = any(k in current for k in [keyboard.Key.alt_l, keyboard.Key.alt_r])
+            has_shift = any(k in current for k in [keyboard.Key.shift, keyboard.Key.shift_r])
+            
+            # Check if target key is pressed
+            has_target = any(k in current for k in TARGET_KEYS)
+            
+            print(f"Ctrl: {has_ctrl}, Alt: {has_alt}, Shift: {has_shift}, Target: {has_target}")
+            
+            if has_ctrl and has_alt and has_shift and has_target:
+                print("Hotkey combination detected!")
+                window.toggle_drawing_mode()
+                return
+                
         except Exception as e:
             print(f"Error in on_press: {e}")
     

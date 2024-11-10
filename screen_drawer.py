@@ -248,19 +248,29 @@ def main():
     window = TransparentWindow()
     window.show()
     
-    # Set up hotkey
-    hotkey = keyboard.HotKey(
-        keyboard.HotKey.parse('<ctrl>+<alt>+<shift>+d'),
-        lambda: window.toggle_drawing_mode()
-    )
+    # Track pressed keys
+    current_keys = set()
     
-    def for_canonical(f):
-        return lambda k: f(k)
-    
-    # Set up listener with the hotkey
-    listener = keyboard.Listener(
-        on_press=for_canonical(hotkey.press),
-        on_release=for_canonical(hotkey.release))
+    def on_press(key):
+        try:
+            current_keys.add(key)
+            # Check for Ctrl+Alt+Shift+D
+            if (keyboard.Key.ctrl in current_keys and 
+                keyboard.Key.alt in current_keys and 
+                keyboard.Key.shift in current_keys and 
+                keyboard.KeyCode.from_char('d') in current_keys):
+                window.toggle_drawing_mode()
+        except Exception as e:
+            print(f"Error in key press handler: {e}")
+
+    def on_release(key):
+        try:
+            current_keys.discard(key)
+        except Exception as e:
+            print(f"Error in key release handler: {e}")
+
+    # Set up keyboard listener
+    listener = keyboard.Listener(on_press=on_press, on_release=on_release)
     listener.start()
     
     # Start Qt event loop

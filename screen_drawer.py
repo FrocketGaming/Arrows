@@ -31,6 +31,8 @@ class TransparentWindow(QMainWindow):
             self.close()
         elif event.key() == Qt.Key.Key_Control:
             self.drawing_mode = True
+            self.activateWindow()  # Activate the window
+            self.raise_()          # Bring it to the front
             self.transparent_widget.update()
             
     def keyReleaseEvent(self, event):

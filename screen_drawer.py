@@ -255,13 +255,13 @@ def main():
     )
     
     def for_canonical(f):
-        return lambda k: f(keyboard.Listener.canonical(k))
+        return lambda k: f(k)
     
     # Set up listener with the hotkey
-    listener = keyboard.Listener(
+    with keyboard.Listener(
         on_press=for_canonical(hotkey.press),
-        on_release=for_canonical(hotkey.release)
-    )
+        on_release=for_canonical(hotkey.release)) as listener:
+        listener.join()
     listener.start()
     
     sys.exit(app.exec())

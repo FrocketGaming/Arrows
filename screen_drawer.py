@@ -11,8 +11,8 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QSizePolicy,
 )
-from PyQt6.QtCore import Qt, QPoint, QTimer, QTime
-from PyQt6.QtGui import QPainter, QPen, QColor, QIcon
+from PyQt6.QtCore import Qt, QPoint, QTimer, QTime, QPropertyAnimation, QEasingCurve
+from PyQt6.QtGui import QPainter, QPen, QColor, QIcon, QPolygon
 from arrow_icons import create_arrow_icon
 
 
@@ -124,7 +124,10 @@ class TransparentWindow(QMainWindow):
                 self.show()
 
                 # Use timer to sequence the window operations
-                self.toolbar.show()
+                self.show()
+                self.toolbar_container.setMaximumHeight(0)
+                self.is_expanded = False
+                self.update_toggle_button_icon(False)
                 self.raise_()
                 self.activateWindow()
                 self.toolbar.raise_()
@@ -165,12 +168,28 @@ class FloatingToolbar(QWidget):
             | Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.WindowStaysOnTopHint
         )
-
-        # Create layout
+        
+        # Create main layout
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(4)
-
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        
+        # Create toggle button
+        self.toggle_button = QPushButton()
+        self.toggle_button.setFixedSize(40, 20)
+        self.toggle_button.clicked.connect(self.toggle_toolbar)
+        self.update_toggle_button_icon(False)
+        layout.addWidget(self.toggle_button)
+        
+        # Create toolbar container
+        self.toolbar_container = QWidget()
+        layout.addWidget(self.toolbar_container)
+        
+        # Create toolbar layout
+        toolbar_layout = QVBoxLayout(self.toolbar_container)
+        toolbar_layout.setContentsMargins(4, 4, 4, 4)
+        toolbar_layout.setSpacing(4)
+        
         # Create toolbar
         self.toolbar = QToolBar()
         self.toolbar.setStyleSheet("""
@@ -226,10 +245,54 @@ class FloatingToolbar(QWidget):
         clear_button.clicked.connect(parent.clear_arrows)
         self.toolbar.addWidget(clear_button)
 
-        # Add toolbar to layout and set initial position
-        layout.addWidget(self.toolbar)
-        self.move(10, 10)
-        self.adjustSize()
+        # Add toolbar to layout
+        toolbar_layout.addWidget(self.toolbar)
+        
+        # Set up animation
+        self.animation = QPropertyAnimation(self.toolbar_container, b"maximumHeight")
+        self.animation.setDuration(300)
+        self.animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        
+        # Initialize state
+        self.is_expanded = False
+        self.toolbar_container.setMaximumHeight(0)
+        
+        # Center the toolbar horizontally
+        screen = QApplication.primaryScreen().geometry()
+        self.move(screen.width() // 2 - self.sizeHint().width() // 2, 0)
+        
+    def update_toggle_button_icon(self, is_expanded):
+        # Create a custom arrow icon
+        icon_size = self.toggle_button.size()
+        pixmap = QPixmap(icon_size)
+        pixmap.fill(Qt.GlobalColor.transparent)
+        
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        
+        # Draw arrow
+        points = QPolygon([
+            QPoint(10, 14 if is_expanded else 6),
+            QPoint(20, 6 if is_expanded else 14),
+            QPoint(30, 14 if is_expanded else 6)
+        ])
+        
+        painter.setPen(QPen(QColor(200, 200, 200), 2))
+        painter.setBrush(QColor(200, 200, 200))
+        painter.drawPolygon(points)
+        painter.end()
+        
+        self.toggle_button.setIcon(QIcon(pixmap))
+        
+    def toggle_toolbar(self):
+        self.is_expanded = not self.is_expanded
+        target_height = self.toolbar.sizeHint().height() + 8 if self.is_expanded else 0
+        
+        self.animation.setStartValue(self.toolbar_container.maximumHeight())
+        self.animation.setEndValue(target_height)
+        self.animation.start()
+        
+        self.update_toggle_button_icon(self.is_expanded)
 
     def handle_arrow_selection(self, arrow_type):
         """Handle arrow type selection and button states"""

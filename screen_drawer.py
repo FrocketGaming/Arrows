@@ -19,9 +19,7 @@ class TransparentWindow(QMainWindow):
         self.base_flags = (
             Qt.WindowType.FramelessWindowHint | 
             Qt.WindowType.WindowStaysOnTopHint |
-            Qt.WindowType.Tool |
-            Qt.WindowType.WindowDoesNotAcceptFocus |
-            Qt.WindowType.BypassWindowManagerHint
+            Qt.WindowType.Tool
         )
         self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
         self.drawing_mode = False
@@ -114,8 +112,9 @@ class TransparentWindow(QMainWindow):
     def toggle_drawing_mode(self):
         if not self.drawing_mode:
             self.drawing_mode = True
-            self.setWindowFlags(self.base_flags & ~Qt.WindowType.WindowTransparentForInput)
+            self.setWindowFlags(self.base_flags)
             self.show()
+            self.activateWindow()
             self.raise_()
             self.toolbar.show()
             self.transparent_widget.update()

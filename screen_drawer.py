@@ -61,33 +61,46 @@ class TransparentWindow(QMainWindow):
             self.transparent_widget.update()
             
     def toggle_drawing_mode(self):
-        self.drawing_mode = not self.drawing_mode
-        
-        if self.drawing_mode:
-            # Enable drawing mode
-            self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
-            self.setWindowFlags(self.drawing_flags)
-            self.show()
-            self.toolbar.show()
+        try:
+            self.drawing_mode = not self.drawing_mode
             
-            # Force window to top and activate
-            self.raise_()
-            self.activateWindow()
-            QApplication.setActiveWindow(self)
-            self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
+            if self.drawing_mode:
+                # Enable drawing mode
+                self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
+                self.setWindowFlags(self.drawing_flags)
+                self.show()
+                
+                # Show toolbar after main window
+                QApplication.processEvents()  # Let the main window show first
+                self.toolbar.show()
+                
+                # Force window to top and activate
+                self.raise_()
+                self.activateWindow()
+                QApplication.setActiveWindow(self)
+                self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
+                
+                # Ensure toolbar is visible and on top
+                self.toolbar.raise_()
+                self.toolbar.activateWindow()
+            else:
+                # Disable drawing mode
+                self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+                self.setWindowFlags(self.inactive_flags)
+                self.toolbar.hide()
+                self.show()
+                self.clearFocus()
+                
+            self.transparent_widget.update()
             
-            # Ensure toolbar is visible and on top
-            self.toolbar.raise_()
-            self.toolbar.activateWindow()
-        else:
-            # Disable drawing mode
+        except Exception as e:
+            print(f"Error toggling drawing mode: {e}")
+            # Try to recover to a safe state
+            self.drawing_mode = False
             self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
             self.setWindowFlags(self.inactive_flags)
             self.toolbar.hide()
             self.show()
-            self.clearFocus()
-            
-        self.transparent_widget.update()
             
     def focusOutEvent(self, event):
         """Keep focus when in drawing mode"""
@@ -268,7 +281,12 @@ def main():
             
             if has_ctrl and has_alt and has_shift and has_target:
                 print("🎯 Hotkey combination detected!")
-                window.toggle_drawing_mode()
+                # Use invokeMethod to safely call from another thread
+                QApplication.instance().invokeMethod(
+                    window,
+                    "toggle_drawing_mode",
+                    Qt.ConnectionType.QueuedConnection
+                )
                 
         except Exception as e:
             print(f"Error in on_press: {e}")

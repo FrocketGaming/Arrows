@@ -41,19 +41,22 @@ class TransparentWindow(QMainWindow):
         self.toolbar = QToolBar()
         self.toolbar.setStyleSheet("""
             QToolBar { 
-                background: rgba(255, 255, 255, 200);
+                background: rgba(50, 50, 50, 230);
                 border-radius: 5px;
                 padding: 2px;
             }
             QPushButton {
-                background: rgba(240, 240, 240, 200);
-                border: 1px solid gray;
+                background: rgba(70, 70, 70, 230);
+                border: 1px solid #555;
                 border-radius: 3px;
                 padding: 4px;
                 margin: 2px;
+                color: white;
+                font-weight: bold;
             }
             QPushButton:hover {
-                background: rgba(220, 220, 220, 200);
+                background: rgba(90, 90, 90, 230);
+                border-color: #666;
             }
         """)
         

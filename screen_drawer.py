@@ -191,10 +191,11 @@ class FloatingToolbar(QWidget):
         )
         layout.insertWidget(0, self.toolbar_container)  # Insert at top
         
-        # Create toolbar layout
+        # Create toolbar layout with center alignment
         toolbar_layout = QVBoxLayout(self.toolbar_container)
         toolbar_layout.setContentsMargins(0, 0, 0, 0)
         toolbar_layout.setSpacing(0)
+        toolbar_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         # Create toolbar
         self.toolbar = QToolBar()
@@ -301,20 +302,22 @@ class FloatingToolbar(QWidget):
         
     def toggle_toolbar(self):
         self.is_expanded = not self.is_expanded
-        target_height = self.toolbar.sizeHint().height() + 8 if self.is_expanded else 0
         
+        # Get the exact height needed for the toolbar
+        target_height = self.toolbar.sizeHint().height() if self.is_expanded else 0
+        
+        # Configure animation
         self.animation.setStartValue(self.toolbar_container.height())
         self.animation.setEndValue(target_height)
         
-        # Set both min and max height before starting animation
-        self.toolbar_container.setMinimumHeight(self.toolbar_container.height())
-        self.toolbar_container.setMaximumHeight(self.toolbar_container.height())
+        # Update the container constraints
+        self.toolbar_container.setFixedHeight(self.toolbar_container.height())
         
+        def animation_finished():
+            self.toolbar_container.setFixedHeight(target_height)
+        
+        self.animation.finished.connect(animation_finished)
         self.animation.start()
-        
-        # Update heights after animation starts
-        self.toolbar_container.setMinimumHeight(target_height)
-        self.toolbar_container.setMaximumHeight(target_height)
         
         self.update_toggle_button_icon(self.is_expanded)
 

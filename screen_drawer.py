@@ -17,10 +17,14 @@ class TransparentWindow(QMainWindow):
         self.alt_pressed = False
         self.shift_pressed = False
         
-        self.base_flags = Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool
+        self.base_flags = (Qt.WindowType.FramelessWindowHint | 
+                          Qt.WindowType.WindowStaysOnTopHint | 
+                          Qt.WindowType.Tool |
+                          Qt.WindowType.SubWindow)  # Allow drawing on other windows
         self.drawing_flags = self.base_flags
         self.inactive_flags = self.base_flags | Qt.WindowType.WindowTransparentForInput
         self.setWindowFlags(self.inactive_flags)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
         self.drawing_mode = False
         
         # Create transparent widget
@@ -78,9 +82,11 @@ class TransparentWindow(QMainWindow):
         self.drawing_mode = not self.drawing_mode
         
         if self.drawing_mode:
+            self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
             self.setWindowFlags(self.drawing_flags)
             self.toolbar.show()
         else:
+            self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
             self.setWindowFlags(self.inactive_flags)
             self.toolbar.hide()
             

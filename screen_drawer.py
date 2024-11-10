@@ -14,6 +14,7 @@ class TransparentWindow(QMainWindow):
             Qt.WindowType.FramelessWindowHint | 
             Qt.WindowType.WindowStaysOnTopHint |
             Qt.WindowType.Tool |
+            Qt.WindowType.SubWindow |
             Qt.WindowType.BypassWindowManagerHint
         )
         self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
@@ -45,6 +46,7 @@ class TransparentWindow(QMainWindow):
                 self.show()
                 self.activateWindow()
                 self.raise_()
+                self.setWindowState(Qt.WindowState.WindowActive)
                 self.transparent_widget.update()
                 return True
         elif event.type() == event.Type.KeyRelease:

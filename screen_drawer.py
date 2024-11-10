@@ -322,7 +322,7 @@ class FloatingToolbar(QWidget):
         self.is_expanded = not self.is_expanded
         
         if self.is_expanded:
-            # Show container and animate expansion
+            # Show container and prepare for expansion
             self.toolbar_container.show()
             expanded_height = self.toolbar.sizeHint().height()
             
@@ -330,19 +330,26 @@ class FloatingToolbar(QWidget):
             self.animation.setStartValue(0)
             self.animation.setEndValue(expanded_height)
             self.toolbar_container.setMaximumHeight(expanded_height)
-            self.toolbar_container.setMinimumHeight(0)
+            
+            # Ensure proper positioning
+            self.toolbar_container.move(0, 0)
+            self.toggle_button.move(self.toggle_button.x(), expanded_height)
         else:
-            # Animate collapse
+            # Prepare for collapse
             current_height = self.toolbar_container.height()
             self.animation.setStartValue(current_height)
             self.animation.setEndValue(0)
-            self.toolbar_container.setMaximumHeight(current_height)
             
+            # Update toggle button position during collapse
+            self.toggle_button.move(self.toggle_button.x(), 0)
+        
         def animation_finished():
             if not self.is_expanded:
                 self.toolbar_container.hide()
                 self.toolbar_container.setMaximumHeight(0)
                 self.toolbar_container.setMinimumHeight(0)
+                # Ensure toggle button stays at top when collapsed
+                self.toggle_button.move(self.toggle_button.x(), 0)
         
         # Disconnect any previous connections to avoid multiple calls
         try:

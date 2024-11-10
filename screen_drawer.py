@@ -1,5 +1,6 @@
 import sys
 import math
+import keyboard
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, 
                             QToolBar, QPushButton, QColorDialog,
                             QVBoxLayout, QSizePolicy)
@@ -11,11 +12,6 @@ class TransparentWindow(QMainWindow):
         super().__init__()
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
-        
-        # Initialize hotkey state
-        self.ctrl_pressed = False
-        self.alt_pressed = False
-        self.shift_pressed = False
         
         self.base_flags = (Qt.WindowType.FramelessWindowHint | 
                           Qt.WindowType.WindowStaysOnTopHint | 
@@ -60,33 +56,9 @@ class TransparentWindow(QMainWindow):
         self.transparent_widget.update()
         
     def keyPressEvent(self, event):
-        # Always check for the hotkey combination first
-        if (event.key() == Qt.Key.Key_D and 
-            event.modifiers() & Qt.KeyboardModifier.ControlModifier and
-            event.modifiers() & Qt.KeyboardModifier.AltModifier and
-            event.modifiers() & Qt.KeyboardModifier.ShiftModifier):
-            self.toggle_drawing_mode()
-            event.accept()
-            return
-            
-        # Handle other keys
         if event.key() == Qt.Key.Key_Escape:
             self.arrows.clear()
             self.transparent_widget.update()
-        elif event.key() == Qt.Key.Key_Control:
-            self.ctrl_pressed = True
-        elif event.key() == Qt.Key.Key_Alt:
-            self.alt_pressed = True
-        elif event.key() == Qt.Key.Key_Shift:
-            self.shift_pressed = True
-                
-    def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key.Key_Control:
-            self.ctrl_pressed = False
-        elif event.key() == Qt.Key.Key_Alt:
-            self.alt_pressed = False
-        elif event.key() == Qt.Key.Key_Shift:
-            self.shift_pressed = False
             
     def toggle_drawing_mode(self):
         self.drawing_mode = not self.drawing_mode
@@ -260,6 +232,10 @@ def main():
     app = QApplication(sys.argv)
     window = TransparentWindow()
     window.show()
+    
+    # Register global hotkey
+    keyboard.add_hotkey('ctrl+alt+shift+d', window.toggle_drawing_mode)
+    
     sys.exit(app.exec())
 
 if __name__ == '__main__':

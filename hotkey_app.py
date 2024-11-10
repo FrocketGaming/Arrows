@@ -1,7 +1,8 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
 from PyQt6.QtCore import Qt, QPoint
-from PyQt6.QtGui import QKeySequence, QShortcut, QPainter, QPen
+from PyQt6.QtGui import QKeySequence, QShortcut, QPainter, QPen, QPixmap
+from PIL import ImageGrab
 import keyboard
 import win32gui
 import win32con
@@ -14,7 +15,14 @@ class DrawingWidget(QWidget):
         self.arrows = []
         self.start_point = None
         self.current_end = None
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.background = None
+        
+    def take_screenshot(self):
+        # Capture the screen
+        screen = ImageGrab.grab()
+        # Convert PIL image to QPixmap
+        screen.save("temp_screen.png")
+        self.background = QPixmap("temp_screen.png")
         
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -35,6 +43,12 @@ class DrawingWidget(QWidget):
             
     def paintEvent(self, event):
         painter = QPainter(self)
+        
+        # Draw the background screenshot
+        if self.background:
+            painter.drawPixmap(0, 0, self.background)
+            
+        # Set up the pen for arrows
         painter.setPen(QPen(Qt.GlobalColor.red, 4))
         
         # Draw completed arrows
@@ -81,20 +95,11 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Arrow Drawing App")
         self.setGeometry(100, 100, 800, 600)
         
-        # Set window flags for transparency
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        # Set window flags
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
             Qt.WindowType.WindowStaysOnTopHint
         )
-        
-        # Set stylesheet for border
-        self.setStyleSheet("""
-            QMainWindow {
-                border: 1px solid #808080;
-                background-color: rgba(255, 255, 255, 30);
-            }
-        """)
         
         # Create and set the drawing widget as central widget
         self.drawing_widget = DrawingWidget()
@@ -105,6 +110,8 @@ class MainWindow(QMainWindow):
         
     def bring_to_front(self):
         try:
+            # Take a new screenshot before showing
+            self.drawing_widget.take_screenshot()
             # Show window if minimized
             self.showNormal()
             # Bring window to front

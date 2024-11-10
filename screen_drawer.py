@@ -25,9 +25,10 @@ class TransparentWindow(QMainWindow):
         # Set initial attributes
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
         self.setAttribute(Qt.WidgetAttribute.WA_AlwaysStackOnTop, True)
-        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
-        self.setAttribute(Qt.WidgetAttribute.WA_X11DoNotAcceptFocus, True)
         self.drawing_mode = False
+        
+        # Create timer to maintain focus
+        self.focus_timer = self.startTimer(100)  # Check every 100ms
         
         # Create transparent widget
         self.transparent_widget = TransparentWidget(self)
@@ -116,14 +117,12 @@ class TransparentWindow(QMainWindow):
             
         self.transparent_widget.update()
             
-    def focusOutEvent(self, event):
-        """Handle focus loss"""
-        super().focusOutEvent(event)
-        if self.drawing_mode:
-            self.activateWindow()
-            self.raise_()
-            QApplication.setActiveWindow(self)
-            self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
+    def timerEvent(self, event):
+        """Periodically ensure window is active and focused"""
+        self.activateWindow()
+        self.raise_()
+        QApplication.setActiveWindow(self)
+        self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
         
 class FloatingToolbar(QWidget):
     def __init__(self, parent=None):

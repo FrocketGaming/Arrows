@@ -4,7 +4,7 @@ from keyboard_manager import KeyboardManager
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, 
                             QToolBar, QPushButton, QColorDialog,
                             QVBoxLayout, QSizePolicy)
-from PyQt6.QtCore import Qt, QPoint, QTimer
+from PyQt6.QtCore import Qt, QPoint, QTimer, QTime
 from PyQt6.QtGui import QPainter, QPen, QColor, QIcon
 from arrow_icons import create_arrow_icon
 
@@ -77,7 +77,7 @@ class TransparentWindow(QMainWindow):
         self.current_arrow_type = arrow_type
         
     def update_dissolving_arrows(self):
-        current_time = QApplication.instance().startTimer()
+        current_time = QTime.currentTime().msecsSinceStartOfDay()
         updated = False
         
         # Filter out arrows that have exceeded their 4-second lifetime
@@ -242,7 +242,7 @@ class TransparentWidget(QWidget):
             self.drawing = False
             if self.start_point and self.end_point:
                 # Store arrow with its color, creation time, and type
-                current_time = QApplication.instance().startTimer()
+                current_time = QTime.currentTime().msecsSinceStartOfDay()
                 is_dissolving = self.parent().current_arrow_type == 'dissolving'
                 self.parent().arrows.append((
                     self.start_point, 
@@ -269,7 +269,7 @@ class TransparentWidget(QWidget):
         painter.setPen(pen)
         
         # Draw all saved arrows with their colors and opacity
-        current_time = QApplication.instance().startTimer()
+        current_time = QTime.currentTime().msecsSinceStartOfDay()
         for start, end, color, creation_time, is_dissolving in self.parent().arrows:
             if is_dissolving:
                 age = current_time - creation_time

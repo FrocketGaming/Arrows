@@ -176,7 +176,7 @@ class FloatingToolbar(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         
-        # Create toolbar container
+        # Create toolbar container first
         self.toolbar_container = QWidget()
         self.toolbar_container.setSizePolicy(
             QSizePolicy.Policy.Preferred,
@@ -184,17 +184,12 @@ class FloatingToolbar(QWidget):
         )
         layout.addWidget(self.toolbar_container)
         
-        # Create toggle button
+        # Create toggle button below
         self.toggle_button = QPushButton()
         self.toggle_button.setFixedSize(40, 20)
         self.toggle_button.clicked.connect(self.toggle_toolbar)
         self.update_toggle_button_icon(False)
         layout.addWidget(self.toggle_button)
-        self.toolbar_container.setSizePolicy(
-            QSizePolicy.Policy.Preferred,
-            QSizePolicy.Policy.Minimum
-        )
-        layout.addWidget(self.toolbar_container)
         
         # Create toolbar layout
         toolbar_layout = QVBoxLayout(self.toolbar_container)
@@ -286,11 +281,12 @@ class FloatingToolbar(QWidget):
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
-        # Draw arrow
+        # Draw arrow centered in button
+        center_x = icon_size.width() // 2
         points = QPolygon([
-            QPoint(10, 6 if is_expanded else 14),
-            QPoint(20, 14 if is_expanded else 6),
-            QPoint(30, 6 if is_expanded else 14)
+            QPoint(center_x - 10, 6 if is_expanded else 14),
+            QPoint(center_x, 14 if is_expanded else 6),
+            QPoint(center_x + 10, 6 if is_expanded else 14)
         ])
         
         painter.setPen(QPen(QColor(200, 200, 200), 2))

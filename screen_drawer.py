@@ -46,6 +46,13 @@ class TransparentWindow(QMainWindow):
         if event.type() == event.Type.KeyPress:
             if event.key() == Qt.Key.Key_Control:
                 self.drawing_mode = True
+                self.setWindowFlags(
+                    Qt.WindowType.FramelessWindowHint | 
+                    Qt.WindowType.WindowStaysOnTopHint |
+                    Qt.WindowType.Tool |
+                    Qt.WindowType.BypassWindowManagerHint
+                )
+                self.show()  # Need to show again after changing flags
                 self.activateWindow()
                 self.raise_()
                 self.transparent_widget.update()
@@ -53,6 +60,14 @@ class TransparentWindow(QMainWindow):
         elif event.type() == event.Type.KeyRelease:
             if event.key() == Qt.Key.Key_Control:
                 self.drawing_mode = False
+                self.setWindowFlags(
+                    Qt.WindowType.FramelessWindowHint | 
+                    Qt.WindowType.WindowStaysOnTopHint |
+                    Qt.WindowType.Tool |
+                    Qt.WindowType.WindowTransparentForInput |
+                    Qt.WindowType.BypassWindowManagerHint
+                )
+                self.show()  # Need to show again after changing flags
                 self.clearFocus()
                 self.transparent_widget.update()
                 return True

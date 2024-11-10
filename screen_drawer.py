@@ -235,6 +235,7 @@ class TransparentWidget(QWidget):
         self.start_point = None
         self.end_point = None
         self.drawing = False
+        self.setCursor(Qt.CursorShape.CrossCursor)  # Set crosshair cursor
         
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and self.parent().drawing_mode:
@@ -272,10 +273,6 @@ class TransparentWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
-        # Only show background in drawing mode
-        if self.parent().drawing_mode:
-            painter.fillRect(self.rect(), QColor(0, 255, 0, 30))  # Semi-transparent green tint when drawing mode
-            
         # Set pen for drawing
         pen = QPen(self.parent().current_color)
         pen.setWidth(4)  # Make lines thicker

@@ -186,15 +186,15 @@ class FloatingToolbar(QWidget):
         # Create toolbar container above
         self.toolbar_container = QWidget()
         self.toolbar_container.setSizePolicy(
-            QSizePolicy.Policy.Preferred,
-            QSizePolicy.Policy.Minimum
+            QSizePolicy.Policy.Fixed,
+            QSizePolicy.Policy.Fixed
         )
         layout.insertWidget(0, self.toolbar_container)  # Insert at top
         
         # Create toolbar layout
         toolbar_layout = QVBoxLayout(self.toolbar_container)
-        toolbar_layout.setContentsMargins(4, 4, 4, 4)
-        toolbar_layout.setSpacing(4)
+        toolbar_layout.setContentsMargins(0, 0, 0, 0)
+        toolbar_layout.setSpacing(0)
         
         # Create toolbar
         self.toolbar = QToolBar()
@@ -253,10 +253,13 @@ class FloatingToolbar(QWidget):
 
         # Add toolbar to layout
         self.toolbar.setSizePolicy(
-            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Fixed,
             QSizePolicy.Policy.Fixed
         )
         toolbar_layout.addWidget(self.toolbar)
+        
+        # Set fixed width to accommodate all buttons
+        self.toolbar.setFixedWidth(200)
         
         # Set up animation
         self.animation = QPropertyAnimation(self.toolbar_container, b"minimumHeight")

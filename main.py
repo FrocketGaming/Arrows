@@ -187,11 +187,8 @@ class ScreenDrawer:
         self.create_window()
         
         # Message loop
-        msg = win32gui.MSG()
-        while win32gui.GetMessage(msg, 0, 0, 0):
-            win32gui.TranslateMessage(msg)
-            win32gui.DispatchMessage(msg)
-            
+        msg = win32gui.WNDCLASS()
+        while win32gui.PumpMessages():
             # Force redraw
             if self.current_window:
                 win32gui.InvalidateRect(self.current_window, None, True)

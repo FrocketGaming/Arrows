@@ -17,7 +17,7 @@ class TransparentWindow(QMainWindow):
         self.base_flags = (Qt.WindowType.FramelessWindowHint | 
                           Qt.WindowType.WindowStaysOnTopHint | 
                           Qt.WindowType.Tool)
-        self.drawing_flags = self.base_flags | Qt.WindowType.WindowDoesNotAcceptFocus
+        self.drawing_flags = self.base_flags | Qt.WindowType.SubWindow  # Changed to SubWindow
         self.inactive_flags = self.base_flags | Qt.WindowType.WindowTransparentForInput
         self.setWindowFlags(self.inactive_flags)
         
@@ -109,17 +109,10 @@ class TransparentWindow(QMainWindow):
                 self.show()
                 
                 # Use timer to sequence the window operations
-                def show_and_raise():
-                    self.toolbar.show()
-                    self.raise_()
-                    self.activateWindow()
-                    QApplication.setActiveWindow(self)
-                    self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
-                    self.toolbar.raise_()
-                    self.toolbar.activateWindow()
-                
-                # Schedule the window operations
-                QTimer.singleShot(100, show_and_raise)
+                self.toolbar.show()
+                self.raise_()
+                self.activateWindow()
+                self.toolbar.raise_()
                 
             else:
                 # Disable drawing mode

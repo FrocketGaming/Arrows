@@ -273,14 +273,18 @@ class FloatingToolbar(QWidget):
         self.toolbar.setFixedWidth(200)
         
         # Set up animation
-        self.animation = QPropertyAnimation(self.toolbar_container, b"minimumHeight")
-        self.animation.setDuration(300)
+        self.animation = QPropertyAnimation(self.toolbar_container, b"maximumHeight")
+        self.animation.setDuration(200)
         self.animation.setEasingCurve(QEasingCurve.Type.OutCubic)
         
         # Initialize state
         self.is_expanded = False
-        self.toolbar_container.setMinimumHeight(0)
         self.toolbar_container.setMaximumHeight(0)
+        
+        def on_animation_finished(self, target_height):
+            """Hide container if fully collapsed"""
+            if target_height == 0:
+                self.toolbar_container.hide()
         
         # Position at top center of screen, flush with top edge
         screen = QApplication.primaryScreen().geometry()
@@ -314,15 +318,18 @@ class FloatingToolbar(QWidget):
     def toggle_toolbar(self):
         self.is_expanded = not self.is_expanded
         
-        if self.is_expanded:
-            # Calculate proper height based on toolbar's sizeHint
-            target_height = self.toolbar.sizeHint().height() + 10  # Add padding
-            self.toolbar_container.setMaximumHeight(target_height)
-            self.toolbar_container.show()
-        else:
-            self.toolbar_container.setMaximumHeight(0)
-            self.toolbar_container.hide()
-            
+        # Show container before animation starts
+        self.toolbar_container.show()
+        
+        # Calculate target height
+        target_height = self.toolbar.sizeHint().height() + 10 if self.is_expanded else 0
+        
+        # Configure and start animation
+        self.animation.setStartValue(self.toolbar_container.height())
+        self.animation.setEndValue(target_height)
+        self.animation.finished.connect(lambda: self.on_animation_finished(target_height))
+        self.animation.start()
+        
         self.update_toggle_button_icon(self.is_expanded)
 
     def handle_arrow_selection(self, arrow_type):

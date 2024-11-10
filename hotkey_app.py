@@ -94,15 +94,37 @@ class MainWindow(QMainWindow):
         keyboard.add_hotkey('ctrl+alt+f', self.bring_to_front)
         
     def bring_to_front(self):
-        # Show window if minimized
-        self.showNormal()
-        # Bring window to front
-        self.activateWindow()
-        self.raise_()
-        # Force focus using Win32 API
-        hwnd = self.winId().__int__()
-        win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
-        win32gui.SetForegroundWindow(hwnd)
+        try:
+            # Show window if minimized
+            self.showNormal()
+            # Bring window to front
+            self.activateWindow()
+            self.raise_()
+            
+            # Force focus using Win32 API
+            hwnd = self.winId().__int__()
+            # Get current foreground window
+            current_hwnd = win32gui.GetForegroundWindow()
+            # Get current thread
+            current_thread = win32gui.GetWindowThreadProcessId(current_hwnd)[0]
+            # Get app's thread
+            app_thread = win32gui.GetWindowThreadProcessId(hwnd)[0]
+            
+            # Attach threads if necessary
+            if current_thread != app_thread:
+                win32gui.AttachThreadInput(current_thread, app_thread, True)
+                try:
+                    win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
+                    win32gui.SetForegroundWindow(hwnd)
+                    win32gui.BringWindowToTop(hwnd)
+                finally:
+                    win32gui.AttachThreadInput(current_thread, app_thread, False)
+            else:
+                win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
+                win32gui.SetForegroundWindow(hwnd)
+                win32gui.BringWindowToTop(hwnd)
+        except Exception as e:
+            print(f"Error bringing window to front: {e}")
 
 def main():
     app = QApplication(sys.argv)

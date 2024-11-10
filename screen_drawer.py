@@ -176,6 +176,13 @@ class FloatingToolbar(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
+        
+        # Make the main widget transparent
+        self.setStyleSheet("""
+            QWidget {
+                background: transparent;
+            }
+        """)
 
         # Create toolbar container
         self.toolbar_container = QWidget()

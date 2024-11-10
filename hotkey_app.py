@@ -1,6 +1,6 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QDesktopWidget
+from PyQt6.QtCore import Qt, QPoint, QRect
 from PyQt6.QtGui import QKeySequence, QShortcut, QPainter, QPen, QPixmap
 from PIL import ImageGrab
 import keyboard
@@ -93,7 +93,9 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Arrow Drawing App")
-        self.setGeometry(100, 100, 800, 600)
+        # Get screen size and set window to match
+        screen = QApplication.primaryScreen().geometry()
+        self.setGeometry(screen)
         
         # Set window flags
         self.setWindowFlags(

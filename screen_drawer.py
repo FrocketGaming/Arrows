@@ -176,9 +176,9 @@ class FloatingToolbar(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
 
-        # Create main layout with negative top margin
+        # Create main layout
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, -1, 0, 0)  # Negative top margin
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         self.setContentsMargins(0, 0, 0, 0)
 
@@ -309,7 +309,7 @@ class FloatingToolbar(QWidget):
         # Position at top center of screen
         screen = QApplication.primaryScreen().geometry()
         self.setFixedWidth(200)  # Set fixed width to prevent shifting
-        self.move(screen.width() // 2 - 100, -1)  # Move slightly above top edge to ensure flush positioning
+        self.move(screen.width() // 2 - 100, 0)  # Exactly at top edge
 
     def update_toggle_button_icon(self, is_expanded):
         # Create a custom arrow icon

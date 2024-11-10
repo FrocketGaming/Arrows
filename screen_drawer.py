@@ -82,10 +82,10 @@ class TransparentWindow(QMainWindow):
         # Check if we have any dissolving arrows
         has_dissolving = any(arrow[4] for arrow in self.arrows)
         
-        # Filter out arrows that have exceeded their 4-second lifetime
+        # Filter out arrows that have exceeded their 2-second lifetime
         self.arrows = [arrow for arrow in self.arrows 
                       if not arrow[4] or  # Keep normal arrows
-                      (arrow[4] and current_time - arrow[3] < 4000)]  # Keep dissolving arrows within time
+                      (arrow[4] and current_time - arrow[3] < 2000)]  # Keep dissolving arrows within time
         
         # Force update if we have any dissolving arrows
         if has_dissolving:
@@ -286,9 +286,9 @@ class TransparentWidget(QWidget):
         for start, end, color, creation_time, is_dissolving in self.parent().arrows:
             if is_dissolving:
                 age = current_time - creation_time
-                if age >= 4000:  # 4 seconds
+                if age >= 2000:  # 2 seconds
                     continue
-                opacity = 1.0 - (age / 4000.0)
+                opacity = 1.0 - (age / 2000.0)
                 painter.setOpacity(opacity)
             else:
                 painter.setOpacity(1.0)

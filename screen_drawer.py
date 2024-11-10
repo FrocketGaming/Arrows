@@ -281,11 +281,6 @@ class FloatingToolbar(QWidget):
         self.is_expanded = False
         self.toolbar_container.setMaximumHeight(0)
         
-        def on_animation_finished(self, target_height):
-            """Hide container if fully collapsed"""
-            if target_height == 0:
-                self.toolbar_container.hide()
-        
         # Position at top center of screen, flush with top edge
         screen = QApplication.primaryScreen().geometry()
         self.setFixedWidth(200)  # Set fixed width to prevent shifting
@@ -331,6 +326,11 @@ class FloatingToolbar(QWidget):
         self.animation.start()
         
         self.update_toggle_button_icon(self.is_expanded)
+
+    def on_animation_finished(self, target_height):
+        """Hide container if fully collapsed"""
+        if target_height == 0:
+            self.toolbar_container.hide()
 
     def handle_arrow_selection(self, arrow_type):
         """Handle arrow type selection and button states"""

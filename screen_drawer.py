@@ -40,7 +40,7 @@ class TransparentWindow(QMainWindow):
             
     def eventFilter(self, obj, event):
         if event.type() == event.Type.KeyPress:
-            if event.key() == Qt.Key.Key_Control:
+            if event.key() == Qt.Key.Key_D and event.modifiers() == Qt.KeyboardModifier.AltModifier:
                 self.drawing_mode = True
                 self.setWindowFlags(self.base_flags)  # Remove WindowTransparentForInput
                 self.show()
@@ -50,7 +50,7 @@ class TransparentWindow(QMainWindow):
                 self.transparent_widget.update()
                 return True
         elif event.type() == event.Type.KeyRelease:
-            if event.key() == Qt.Key.Key_Control:
+            if event.key() == Qt.Key.Key_D and event.modifiers() == Qt.KeyboardModifier.AltModifier:
                 self.drawing_mode = False
                 self.setWindowFlags(self.base_flags | Qt.WindowType.WindowTransparentForInput)
                 self.show()
@@ -60,7 +60,7 @@ class TransparentWindow(QMainWindow):
         return super().eventFilter(obj, event)
 
     def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key.Key_Control:
+        if event.key() == Qt.Key.Key_D and event.modifiers() == Qt.KeyboardModifier.AltModifier:
             self.drawing_mode = False
             self.clearFocus()
             self.transparent_widget.update()

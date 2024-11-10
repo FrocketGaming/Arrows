@@ -317,19 +317,33 @@ class FloatingToolbar(QWidget):
     def toggle_toolbar(self):
         self.is_expanded = not self.is_expanded
         
-        # Get the exact height needed for the toolbar
-        target_height = self.toolbar.sizeHint().height() if self.is_expanded else 0
+        # Calculate heights
+        expanded_height = self.toolbar.sizeHint().height()
+        current_height = self.toolbar_container.height()
+        target_height = expanded_height if self.is_expanded else 0
         
         # Configure animation
-        self.animation.setStartValue(self.toolbar_container.height())
+        self.animation.setStartValue(current_height)
         self.animation.setEndValue(target_height)
         
         # Update the container constraints
-        self.toolbar_container.setFixedHeight(self.toolbar_container.height())
+        self.toolbar_container.setMaximumHeight(expanded_height)
         
         def animation_finished():
-            self.toolbar_container.setFixedHeight(target_height)
+            if not self.is_expanded:
+                # When collapsed, set both min and max height to 0
+                self.toolbar_container.setMaximumHeight(0)
+                self.toolbar_container.setMinimumHeight(0)
+            else:
+                # When expanded, allow the container to fit the content
+                self.toolbar_container.setMinimumHeight(target_height)
         
+        # Disconnect any previous connections to avoid multiple calls
+        try:
+            self.animation.finished.disconnect()
+        except:
+            pass
+            
         self.animation.finished.connect(animation_finished)
         self.animation.start()
         

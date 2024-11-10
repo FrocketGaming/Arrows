@@ -56,7 +56,7 @@ class TransparentWindow(QMainWindow):
 
         # Create floating toolbar window
         self.toolbar = FloatingToolbar(self)
-        # Don't show toolbar initially since we start in non-drawing mode
+        self.toolbar.hide()  # Ensure toolbar is hidden initially
 
         # Initialize current color
         self.current_color = QColor(255, 0, 0)  # Default red
@@ -182,12 +182,12 @@ class FloatingToolbar(QWidget):
         self.toggle_button.clicked.connect(self.toggle_toolbar)
         self.toggle_button.setStyleSheet("""
             QPushButton {
-                background: rgb(50, 50, 50);
+                background: rgb(40, 40, 40);
                 border: none;
                 border-radius: 3px;
             }
             QPushButton:hover {
-                background: rgb(60, 60, 60);
+                background: rgb(50, 50, 50);
             }
         """)
         self.update_toggle_button_icon(False)
@@ -207,7 +207,7 @@ class FloatingToolbar(QWidget):
         toolbar_layout.setSpacing(0)
         self.toolbar_container.setStyleSheet("""
             QWidget {
-                background: rgb(70, 70, 70);
+                background: rgb(40, 40, 40);
                 border-radius: 5px;
             }
         """)
@@ -222,8 +222,8 @@ class FloatingToolbar(QWidget):
                 padding: 2px;
             }
             QPushButton {
-                background: rgb(70, 70, 70);
-                border: 1px solid #555;
+                background: rgb(40, 40, 40);
+                border: 1px solid #333;
                 border-radius: 3px;
                 padding: 4px;
                 margin: 2px;
@@ -231,8 +231,8 @@ class FloatingToolbar(QWidget):
                 font-weight: bold;
             }
             QPushButton:hover {
-                background: rgb(90, 90, 90);
-                border-color: #666;
+                background: rgb(50, 50, 50);
+                border-color: #444;
             }
             QPushButton:checked {
                 background: rgb(100, 100, 255);

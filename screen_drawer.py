@@ -340,6 +340,9 @@ class FloatingToolbar(QWidget):
     def toggle_toolbar(self):
         self.is_expanded = not self.is_expanded
 
+        # Store current position
+        current_pos = self.pos()
+
         # Disconnect any existing connections to avoid multiple signals
         try:
             self.animation.finished.disconnect()
@@ -363,6 +366,9 @@ class FloatingToolbar(QWidget):
         # Start animation
         self.animation.start()
         self.update_toggle_button_icon(self.is_expanded)
+
+        # Ensure position stays at top edge
+        self.move(current_pos.x(), 0)
 
     def on_animation_finished(self, target_height):
         """Hide container if fully collapsed"""

@@ -1,7 +1,8 @@
 import sys
 import math
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, 
-                            QToolBar, QPushButton, QColorDialog)
+                            QToolBar, QPushButton, QColorDialog,
+                            QVBoxLayout, QSizePolicy)
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtGui import QPainter, QPen, QColor, QIcon
 
@@ -95,10 +96,13 @@ class TransparentWindow(QMainWindow):
             self.transparent_widget.update()
             
     def focusOutEvent(self, event):
-        """Ensure we regain focus when clicked in taskbar"""
+        """Handle focus loss"""
         super().focusOutEvent(event)
-        self.activateWindow()
-        self.setFocus()
+        if self.drawing_mode:
+            self.activateWindow()
+            self.raise_()
+            QApplication.setActiveWindow(self)
+            self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
         
 class FloatingToolbar(QWidget):
     def __init__(self, parent=None):
@@ -109,8 +113,14 @@ class FloatingToolbar(QWidget):
             Qt.WindowType.WindowStaysOnTopHint
         )
         
-        # Create toolbar
+        # Create layout
+        layout = QVBoxLayout()
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(4)
+        
+        # Create toolbar with minimal size
         self.toolbar = QToolBar()
+        self.toolbar.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         self.toolbar.setStyleSheet("""
             QToolBar { 
                 background: rgba(50, 50, 50, 230);
@@ -141,12 +151,16 @@ class FloatingToolbar(QWidget):
         clear_button.clicked.connect(parent.clear_arrows)
         self.toolbar.addWidget(clear_button)
         
-        # Add toolbar to widget
-        self.toolbar.setParent(self)
+        # Add toolbar to layout
+        layout.addWidget(self.toolbar)
+        self.setLayout(layout)
         
         # Set size and position
         self.adjustSize()
         self.move(10, 10)
+        
+        # Ensure minimal size
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
 
 class TransparentWidget(QWidget):
     def __init__(self, parent=None):

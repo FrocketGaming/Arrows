@@ -13,6 +13,7 @@ class TransparentWindow(QMainWindow):
             Qt.WindowType.WindowStaysOnTopHint |
             Qt.WindowType.Tool
         )
+        self.drawing_mode = False
         
         # Create transparent widget
         self.transparent_widget = TransparentWidget(self)
@@ -28,6 +29,14 @@ class TransparentWindow(QMainWindow):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
             self.close()
+        elif event.key() == Qt.Key.Key_Control:
+            self.drawing_mode = True
+            self.transparent_widget.update()
+            
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key.Key_Control:
+            self.drawing_mode = False
+            self.transparent_widget.update()
         
 class TransparentWidget(QWidget):
     def __init__(self, parent=None):
@@ -38,7 +47,7 @@ class TransparentWidget(QWidget):
         self.drawing = False
         
     def mousePressEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton and self.parent().drawing_mode:
             self.drawing = True
             self.start_point = event.pos()
             self.end_point = event.pos()
@@ -61,6 +70,10 @@ class TransparentWidget(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        
+        # Draw semi-transparent background when not in drawing mode
+        if not self.parent().drawing_mode:
+            painter.fillRect(self.rect(), QColor(200, 200, 200, 30))
         
         # Set pen for drawing
         pen = QPen(QColor(255, 0, 0))  # Red color

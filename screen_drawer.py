@@ -171,12 +171,12 @@ class FloatingToolbar(QWidget):
             | Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.WindowStaysOnTopHint
         )
-        
+
         # Create main layout
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        
+
         # Make the main widget transparent
         self.setStyleSheet("""
             QWidget {
@@ -188,7 +188,7 @@ class FloatingToolbar(QWidget):
         self.toolbar_container = QWidget()
         self.toolbar_container.setStyleSheet("""
             QWidget {
-                background: transparent;
+                background: #fff;
                 border-radius: 5px;
             }
         """)
@@ -209,7 +209,7 @@ class FloatingToolbar(QWidget):
         """)
         self.update_toggle_button_icon(False)
         layout.addWidget(self.toggle_button, 0, Qt.AlignmentFlag.AlignCenter)
-        
+
         # Create toolbar
         self.toolbar = QToolBar()
         self.toolbar.setStyleSheet("""
@@ -265,83 +265,84 @@ class FloatingToolbar(QWidget):
         self.toolbar.addWidget(clear_button)
 
         # Add toolbar to layout
-        self.toolbar.setSizePolicy(
-            QSizePolicy.Policy.Fixed,
-            QSizePolicy.Policy.Fixed
-        )
+        self.toolbar.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         # Create layout for toolbar container and add toolbar to it
         container_layout = QVBoxLayout(self.toolbar_container)
         container_layout.setContentsMargins(0, 0, 0, 0)
         container_layout.setSpacing(0)
         container_layout.addWidget(self.toolbar)
-        
+
         # Make the container layout transparent
         self.toolbar_container.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.toolbar_container.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
-        
+
         # Set fixed width to accommodate all buttons
         self.toolbar.setFixedWidth(200)
-        
+
         # Set up animation
         self.animation = QPropertyAnimation(self.toolbar_container, b"maximumHeight")
         self.animation.setDuration(250)  # Slightly longer duration
         self.animation.setEasingCurve(QEasingCurve.Type.OutQuad)
-        
+
         # Initialize state
         self.is_expanded = False
         self.toolbar_container.setMaximumHeight(0)
         self.toolbar_container.hide()
-        
+
         # Position at top center of screen, flush with top edge
         screen = QApplication.primaryScreen().geometry()
         self.setFixedWidth(200)  # Set fixed width to prevent shifting
         self.move(screen.width() // 2 - 100, 0)  # Center horizontally, flush with top
-        
+
     def update_toggle_button_icon(self, is_expanded):
         # Create a custom arrow icon
         icon_size = self.toggle_button.size()
         pixmap = QPixmap(icon_size)
         pixmap.fill(Qt.GlobalColor.transparent)
-        
+
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        
+
         # Draw arrow centered in button - arrow points up when collapsed, down when expanded
         center_x = icon_size.width() // 2
-        points = QPolygon([
-            QPoint(center_x - 10, 14 if is_expanded else 6),  # Reversed logic
-            QPoint(center_x, 6 if is_expanded else 14),       # Reversed logic
-            QPoint(center_x + 10, 14 if is_expanded else 6)   # Reversed logic
-        ])
-        
+        points = QPolygon(
+            [
+                QPoint(center_x - 10, 14 if is_expanded else 6),  # Reversed logic
+                QPoint(center_x, 6 if is_expanded else 14),  # Reversed logic
+                QPoint(center_x + 10, 14 if is_expanded else 6),  # Reversed logic
+            ]
+        )
+
         painter.setPen(QPen(QColor(200, 200, 200), 2))
         painter.setBrush(QColor(200, 200, 200))
         painter.drawPolygon(points)
         painter.end()
-        
+
         self.toggle_button.setIcon(QIcon(pixmap))
-        
+
     def toggle_toolbar(self):
         self.is_expanded = not self.is_expanded
-        
+
         # Disconnect any existing connections to avoid multiple signals
         try:
             self.animation.finished.disconnect()
         except TypeError:
             pass
-            
+
         # Calculate target height
         target_height = self.toolbar.sizeHint().height() + 10 if self.is_expanded else 0
-        
+
         # Show container if expanding
         if self.is_expanded:
             self.toolbar_container.show()
-        
+
         # Configure animation
         self.animation.setStartValue(self.toolbar_container.height())
         self.animation.setEndValue(target_height)
-        self.animation.finished.connect(lambda: self.on_animation_finished(target_height))
-        
+        self.animation.finished.connect(
+            lambda: self.on_animation_finished(target_height)
+        )
+
         # Start animation
         self.animation.start()
         self.update_toggle_button_icon(self.is_expanded)

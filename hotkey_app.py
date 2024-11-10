@@ -114,29 +114,41 @@ class MainWindow(QMainWindow):
             # Force focus using Win32 API
             hwnd = self.winId().__int__()
             
-            # Show window first
-            win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
+            # Get current foreground window info
+            current_hwnd = win32gui.GetForegroundWindow()
+            current_thread = win32process.GetWindowThreadProcessId(current_hwnd)[0]
+            app_thread = win32process.GetWindowThreadProcessId(hwnd)[0]
             
-            # Try to set foreground window directly first
-            if win32gui.GetForegroundWindow() != hwnd:
-                # If that didn't work, try with thread attachment
-                try:
-                    # Get current foreground window thread
-                    current_hwnd = win32gui.GetForegroundWindow()
-                    current_thread = win32process.GetWindowThreadProcessId(current_hwnd)[0]
-                    # Get our window thread
-                    app_thread = win32process.GetWindowThreadProcessId(hwnd)[0]
-                    
-                    if current_thread != app_thread:
-                        # Attach briefly
-                        win32api.AttachThreadInput(current_thread, app_thread, True)
+            # Make sure our window isn't minimized
+            win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+            
+            # Try multiple methods to activate the window
+            try:
+                # Method 1: Basic window activation
+                win32gui.SetActiveWindow(hwnd)
+                win32gui.BringWindowToTop(hwnd)
+                
+                # Method 2: Thread attachment method
+                if current_thread != app_thread:
+                    win32api.AttachThreadInput(current_thread, app_thread, True)
+                    try:
                         win32gui.SetForegroundWindow(hwnd)
+                    finally:
                         win32api.AttachThreadInput(current_thread, app_thread, False)
-                except:
-                    # If thread attachment fails, try alternative method
+                
+                # Method 3: Alternative activation sequence
+                if win32gui.GetForegroundWindow() != hwnd:
+                    # Simulate Alt key press which can help with focus
+                    win32api.keybd_event(0x12, 0, 0, 0)  # Alt press
                     win32gui.SetForegroundWindow(hwnd)
+                    win32api.keybd_event(0x12, 0, 0x0002, 0)  # Alt release
                     
-            win32gui.BringWindowToTop(hwnd)
+            except Exception as e:
+                print(f"Activation attempt failed: {str(e)}")
+                
+            # Final attempt to ensure visibility
+            self.show()
+            self.activateWindow()
         except Exception as e:
             print(f"Error bringing window to front: {e}")
 

@@ -1,16 +1,86 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QKeySequence, QShortcut
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
+from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtGui import QKeySequence, QShortcut, QPainter, QPen
 import keyboard
 import win32gui
 import win32con
 
+class DrawingWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.arrows = []
+        self.start_point = None
+        self.current_end = None
+        
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.start_point = event.pos()
+            self.current_end = event.pos()
+            
+    def mouseMoveEvent(self, event):
+        if self.start_point is not None:
+            self.current_end = event.pos()
+            self.update()
+            
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and self.start_point:
+            self.arrows.append((self.start_point, event.pos()))
+            self.start_point = None
+            self.current_end = None
+            self.update()
+            
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setPen(QPen(Qt.GlobalColor.black, 2))
+        
+        # Draw completed arrows
+        for start, end in self.arrows:
+            self.draw_arrow(painter, start, end)
+            
+        # Draw current arrow
+        if self.start_point and self.current_end:
+            self.draw_arrow(painter, self.start_point, self.current_end)
+            
+    def draw_arrow(self, painter, start, end):
+        painter.drawLine(start, end)
+        
+        # Calculate arrow head
+        arrow_size = 10
+        angle = 30  # degrees
+        
+        # Calculate direction vector
+        dx = end.x() - start.x()
+        dy = end.y() - start.y()
+        length = (dx * dx + dy * dy) ** 0.5
+        if length == 0:
+            return
+            
+        # Normalize direction vector
+        dx = dx / length
+        dy = dy / length
+        
+        # Calculate arrow head points
+        import math
+        angle_rad = math.radians(angle)
+        x1 = end.x() - arrow_size * (dx * math.cos(angle_rad) + dy * math.sin(angle_rad))
+        y1 = end.y() - arrow_size * (dy * math.cos(angle_rad) - dx * math.sin(angle_rad))
+        x2 = end.x() - arrow_size * (dx * math.cos(angle_rad) - dy * math.sin(angle_rad))
+        y2 = end.y() - arrow_size * (dy * math.cos(angle_rad) + dx * math.sin(angle_rad))
+        
+        # Draw arrow head
+        painter.drawLine(end, QPoint(int(x1), int(y1)))
+        painter.drawLine(end, QPoint(int(x2), int(y2)))
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Hotkey App")
-        self.setGeometry(100, 100, 400, 200)
+        self.setWindowTitle("Arrow Drawing App")
+        self.setGeometry(100, 100, 800, 600)
+        
+        # Create and set the drawing widget as central widget
+        self.drawing_widget = DrawingWidget()
+        self.setCentralWidget(self.drawing_widget)
         
         # Register global hotkey
         keyboard.add_hotkey('ctrl+alt+f', self.bring_to_front)

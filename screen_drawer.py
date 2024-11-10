@@ -42,6 +42,7 @@ class TransparentWidget(QWidget):
             self.drawing = True
             self.start_point = event.pos()
             self.end_point = event.pos()
+            print(f"Mouse press at: {self.start_point.x()}, {self.start_point.y()}")
             
     def mouseMoveEvent(self, event):
         if self.drawing:
@@ -53,6 +54,8 @@ class TransparentWidget(QWidget):
             self.drawing = False
             if self.start_point and self.end_point:
                 self.parent().arrows.append((self.start_point, self.end_point))
+                print(f"Arrow added: from ({self.start_point.x()}, {self.start_point.y()}) to ({self.end_point.x()}, {self.end_point.y()})")
+                print(f"Total arrows: {len(self.parent().arrows)}")
             self.update()
             
     def paintEvent(self, event):

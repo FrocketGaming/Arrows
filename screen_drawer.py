@@ -218,7 +218,7 @@ class FloatingToolbar(QWidget):
                 padding: 2px;
             }
             QPushButton {
-                background: rgb(40, 40, 40);
+                background: #fff;
                 border: 1px solid #333;
                 border-radius: 3px;
                 padding: 4px;
@@ -271,7 +271,7 @@ class FloatingToolbar(QWidget):
         container_layout.setContentsMargins(0, 0, 0, 0)
         container_layout.setSpacing(0)
         container_layout.addWidget(self.toolbar)
-        
+
         # Make the container layout transparent
         self.toolbar_container.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.toolbar_container.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)

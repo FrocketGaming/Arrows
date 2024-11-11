@@ -11,7 +11,15 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QSizePolicy,
 )
-from PyQt6.QtCore import Qt, QPoint, QTimer, QTime, QPropertyAnimation, QEasingCurve, QRect
+from PyQt6.QtCore import (
+    Qt,
+    QPoint,
+    QTimer,
+    QTime,
+    QPropertyAnimation,
+    QEasingCurve,
+    QRect,
+)
 from PyQt6.QtGui import QPainter, QPen, QColor, QIcon, QPolygon, QPixmap
 from arrow_icons import create_arrow_icon
 
@@ -56,7 +64,8 @@ class TransparentWindow(QMainWindow):
 
         # Create floating toolbar window
         self.toolbar = FloatingToolbar(self)
-        self.toolbar.hide()  # Hide the toolbar initially
+        self.toolbar.toolbar_container.hide()  # Hide the container
+        self.toolbar.hide()  # Hide the entire toolbar initially
 
         # Initialize current color
         self.current_color = QColor(255, 0, 0)  # Default red
@@ -123,9 +132,12 @@ class TransparentWindow(QMainWindow):
                 )
                 self.setWindowFlags(self.drawing_flags)
                 self.show()
-                # Show toolbar in collapsed state
-                self.toolbar.is_expanded = False  # Ensure it starts collapsed
-                self.toolbar.show()  # Show the toolbar
+
+                # Ensure the toolbar starts collapsed and is handled by its own logic
+                if self.toolbar.is_expanded:
+                    self.toolbar.toggle_toolbar()  # Collapse toolbar if expanded
+
+                self.toolbar.show()  # Show the toolbar with the toggle button
                 self.raise_()
                 self.activateWindow()
                 self.toolbar.raise_()
@@ -134,23 +146,19 @@ class TransparentWindow(QMainWindow):
                 # Disable drawing mode
                 self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
                 self.setWindowFlags(self.inactive_flags)
-                # Ensure toolbar is collapsed before hiding
+
+                # Ensure the toolbar is collapsed before hiding
                 if self.toolbar.is_expanded:
-                    self.toolbar.toggle_toolbar()
-                self.toolbar.hide()
+                    self.toolbar.toggle_toolbar()  # Collapse toolbar if expanded
+
+                self.toolbar.hide()  # Hide the toolbar completely when drawing mode is off
                 self.show()
                 self.clearFocus()
 
             self.transparent_widget.update()
 
         except Exception as e:
-            print(f"Error toggling drawing mode: {e}")
-            # Try to recover to a safe state
-            self.drawing_mode = False
-            self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
-            self.setWindowFlags(self.inactive_flags)
-            self.toolbar.hide()
-            self.show()
+            print(f"Error in toggle_drawing_mode: {e}")
 
     def focusOutEvent(self, event):
         """Keep focus when in drawing mode"""
@@ -169,19 +177,53 @@ class FloatingToolbar(QWidget):
             | Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.WindowStaysOnTopHint
         )
-        self.initial_position = None
-        
-        # Transparency and no system background
+
+        # Set widget attributes for transparency
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
 
-        # Main layout with 0 margins
+        # Create main layout
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         self.setContentsMargins(0, 0, 0, 0)
 
-        # Toolbar setup
+        # Make the main widget and all children transparent
+        self.setStyleSheet("""
+            FloatingToolbar, QWidget {
+                background: transparent;
+                border: none;
+            }
+        """)
+
+        # Create toolbar container
+        self.toolbar_container = QWidget()
+        self.toolbar_container.setStyleSheet("""
+            QWidget, QWidget * {
+                background: transparent;
+                border-radius: 5px;
+            }
+        """)
+        layout.addWidget(self.toolbar_container)
+
+        # Create toggle button
+        self.toggle_button = QPushButton()
+        self.toggle_button.setFixedSize(40, 20)
+        self.toggle_button.clicked.connect(self.toggle_toolbar)
+        self.toggle_button.setStyleSheet("""
+            QPushButton {
+                background: rgba(60, 60, 60, 0.95);
+                border: none;
+                border-radius: 3px;
+            }
+            QPushButton:hover {
+                background: rgba(80, 80, 80, 0.95);
+            }
+        """)
+        self.update_toggle_button_icon(False)
+        layout.addWidget(self.toggle_button, 0, Qt.AlignmentFlag.AlignCenter)
+
+        # Create toolbar
         self.toolbar = QToolBar()
         self.toolbar.setStyleSheet("""
             QToolBar { 
@@ -207,50 +249,77 @@ class FloatingToolbar(QWidget):
                 border-color: #88f;
             }
         """)
-        self.setup_toolbar_buttons()
-        self.toolbar.setFixedWidth(200)
-        self.toolbar.hide()
 
-        # Toggle button
-        self.toggle_button = QPushButton()
-        self.toggle_button.setFixedSize(40, 20)
-        self.toggle_button.clicked.connect(self.toggle_toolbar)
-        self.toggle_button.setStyleSheet("""
-            QPushButton {
-                background: rgba(60, 60, 60, 0.95);
-                border: none;
-                border-radius: 3px;
+        # Add buttons
+        self.normal_arrow_button = QPushButton()
+        self.normal_arrow_button.setIcon(create_arrow_icon())
+        self.normal_arrow_button.setToolTip("Normal Arrow")
+        self.normal_arrow_button.setCheckable(True)
+        self.normal_arrow_button.setChecked(True)
+        self.normal_arrow_button.clicked.connect(
+            lambda: self.handle_arrow_selection("normal")
+        )
+        self.toolbar.addWidget(self.normal_arrow_button)
+
+        self.dissolving_arrow_button = QPushButton()
+        self.dissolving_arrow_button.setIcon(create_arrow_icon(dissolving=True))
+        self.dissolving_arrow_button.setToolTip("Dissolving Arrow")
+        self.dissolving_arrow_button.setCheckable(True)
+        self.dissolving_arrow_button.clicked.connect(
+            lambda: self.handle_arrow_selection("dissolving")
+        )
+        self.toolbar.addWidget(self.dissolving_arrow_button)
+
+        color_button = QPushButton("Color")
+        color_button.clicked.connect(parent.choose_color)
+        self.toolbar.addWidget(color_button)
+
+        clear_button = QPushButton("Clear")
+        clear_button.clicked.connect(parent.clear_arrows)
+        self.toolbar.addWidget(clear_button)
+
+        # Add toolbar to layout
+        self.toolbar.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        # Create layout for toolbar container and add toolbar to it\
+        container_layout = QVBoxLayout(self.toolbar_container)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+        container_layout.setSpacing(0)
+        self.toolbar_container.setContentsMargins(0, 0, 0, 0)
+        container_layout.addWidget(self.toolbar, 0, Qt.AlignmentFlag.AlignCenter)
+
+        # Make the container layout transparent
+        self.toolbar_container.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.toolbar_container.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
+        self.toolbar_container.setStyleSheet("""
+            QWidget {
+                background: transparent;
             }
-            QPushButton:hover {
-                background: rgba(80, 80, 80, 0.95);
+            QLayout {
+                background: transparent;
             }
         """)
-        self.update_toggle_button_icon(False)
-        layout.addWidget(self.toggle_button, 0, Qt.AlignmentFlag.AlignCenter)
 
-        # Add widgets
-        layout.addWidget(self.toolbar)
-        layout.addWidget(self.toggle_button)
+        # Set fixed width to accommodate all buttons
+        # self.toolbar.setFixedWidth(200)
 
-        # Animation for toolbar slide
-        self.animation = QPropertyAnimation(self, b"geometry")
-        self.animation.setDuration(200)
+        # Set up animation
+        self.animation = QPropertyAnimation(self.toolbar_container, b"maximumHeight")
+        self.animation.setDuration(250)  # Slightly longer duration
         self.animation.setEasingCurve(QEasingCurve.Type.OutQuad)
 
-        # State and height
-        self.is_expanded = False
-        self.base_height = self.toggle_button.height()
-        self.expanded_height = self.base_height + self.toolbar.sizeHint().height()
+        # Initialize state
 
-        # Initial position at top center of screen
+        self.is_expanded = False
+        self.toolbar_container.setMaximumHeight(0)
+        self.toolbar_container.hide()
+
+        # Position at top center of screen
         screen = QApplication.primaryScreen().geometry()
         self.setFixedWidth(200)  # Set fixed width to prevent shifting
-        initial_x = screen.width() // 2 - self.width() // 2
-        self.move(initial_x, 0)  # Exactly at top edge
-        self.initial_position = QPoint(initial_x, 0)
+        self.move(screen.width() // 2 - 100, 0)  # Exactly at top edge
 
     def update_toggle_button_icon(self, is_expanded):
-        """Updates icon with arrow direction for toggle button."""
+        # Create a custom arrow icon
         icon_size = self.toggle_button.size()
         pixmap = QPixmap(icon_size)
         pixmap.fill(Qt.GlobalColor.transparent)
@@ -258,13 +327,13 @@ class FloatingToolbar(QWidget):
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        # Draw arrow in button - up when collapsed, down when expanded
+        # Draw arrow centered in button - arrow points up when collapsed, down when expanded
         center_x = icon_size.width() // 2
         points = QPolygon(
             [
-                QPoint(center_x - 10, 14 if is_expanded else 6),
-                QPoint(center_x, 6 if is_expanded else 14),
-                QPoint(center_x + 10, 14 if is_expanded else 6),
+                QPoint(center_x - 10, 14 if is_expanded else 6),  # Reversed logic
+                QPoint(center_x, 6 if is_expanded else 14),  # Reversed logic
+                QPoint(center_x + 10, 14 if is_expanded else 6),  # Reversed logic
             ]
         )
 
@@ -276,26 +345,28 @@ class FloatingToolbar(QWidget):
         self.toggle_button.setIcon(QIcon(pixmap))
 
     def toggle_toolbar(self):
-        """Toggles the toolbar slide in and out."""
+        # Toggle the expanded state
         self.is_expanded = not self.is_expanded
-        
-        # Get current and target geometry
-        geo = self.geometry()
-        if self.is_expanded:
-            self.toolbar.show()
-            target_geo = QRect(geo.x(), 0, self.width(), self.expanded_height)
-        else:
-            target_geo = QRect(geo.x(), 0, self.width(), self.base_height)
-        
-        # Setup animation and connect finished signal for hiding
-        self.animation.setStartValue(geo)
-        self.animation.setEndValue(target_geo)
+
+        # Calculate the expanded height for the toolbar
+        base_height = self.toggle_button.height()
+        expanded_height = base_height + self.toolbar.sizeHint().height()
+
+        # Set target height for the container (based on expanded/collapsed state)
+        target_height = expanded_height if self.is_expanded else base_height
+
+        # Animate the transition for smooth expansion and collapsing
+        self.animation.setStartValue(self.toolbar_container.maximumHeight())
+        self.animation.setEndValue(target_height)
         self.animation.start()
 
-        if not self.is_expanded:
-            self.animation.finished.connect(self.toolbar.hide, type=Qt.ConnectionType.UniqueConnection)
-        
-        # Update button icon
+        # Adjust visibility and size based on state
+        if self.is_expanded:
+            self.toolbar_container.show()
+        else:
+            self.toolbar_container.hide()
+
+        self.adjustSize()
         self.update_toggle_button_icon(self.is_expanded)
 
     def on_animation_finished(self, target_height):
@@ -303,26 +374,14 @@ class FloatingToolbar(QWidget):
         if target_height == 0:
             self.toolbar_container.hide()
 
-    def setup_toolbar_buttons(self):
-        """Set up toolbar buttons."""
-        normal_arrow_button = QPushButton("Normal Arrow")
-        normal_arrow_button.clicked.connect(lambda: self.handle_arrow_selection("normal"))
-        self.toolbar.addWidget(normal_arrow_button)
-
-        dissolving_arrow_button = QPushButton("Dissolving Arrow")
-        dissolving_arrow_button.clicked.connect(lambda: self.handle_arrow_selection("dissolving"))
-        self.toolbar.addWidget(dissolving_arrow_button)
-
-        color_button = QPushButton("Color")
-        color_button.clicked.connect(self.parent().choose_color)
-        self.toolbar.addWidget(color_button)
-
-        clear_button = QPushButton("Clear")
-        clear_button.clicked.connect(self.parent().clear_arrows)
-        self.toolbar.addWidget(clear_button)
-
     def handle_arrow_selection(self, arrow_type):
-        """Handle arrow selection."""
+        """Handle arrow type selection and button states"""
+        if arrow_type == "normal":
+            self.normal_arrow_button.setChecked(True)
+            self.dissolving_arrow_button.setChecked(False)
+        else:
+            self.normal_arrow_button.setChecked(False)
+            self.dissolving_arrow_button.setChecked(True)
         self.parent().set_arrow_type(arrow_type)
 
 

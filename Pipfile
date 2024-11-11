@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 pyqt6 = "*"
 keyboard = "*"
+pynput = "*"
 
 [dev-packages]
 
